@@ -1,0 +1,939 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Nodex V4.0 — Formation Interactive</title>
+<style>
+  :root {
+    --bg-primary: #0f1720;
+    --bg-secondary: #161e2b;
+    --bg-tertiary: #1e2736;
+    --border: #2a3447;
+    --text-primary: #d1d4dc;
+    --text-secondary: #8595a6;
+    --text-muted: #606f80;
+    --accent-blue: #2962ff;
+    --bull: #26a69a;
+    --bull-bg: rgba(38, 166, 154, 0.15);
+    --bear: #ef5350;
+    --bear-bg: rgba(239, 83, 80, 0.15);
+    --warn: #f5a623;
+    --warn-bg: rgba(245, 166, 35, 0.15);
+    --gold: #ffb74d;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-size: 14px;
+    min-height: 100vh;
+    padding: 16px;
+  }
+  .header {
+    background: linear-gradient(135deg, #131722 0%, #1e2736 100%);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px 28px;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .header h1 {
+    font-size: 20px;
+    background: linear-gradient(90deg, #fff, #8595a6);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .header .subtitle {
+    color: var(--text-muted);
+    font-size: 12px;
+    margin-top: 4px;
+  }
+  .badges { display: flex; gap: 8px; }
+  .badge {
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 500;
+  }
+  .badge.tf { background: var(--bg-tertiary); border: 1px solid var(--border); }
+  .badge.bull { background: var(--bull-bg); color: var(--bull); border: 1px solid var(--bull); }
+  .badge.live { background: var(--bear-bg); color: var(--bear); border: 1px solid var(--bear); animation: pulse 1.5s infinite; }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+  .main-layout {
+    display: grid;
+    grid-template-columns: 2.2fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+  @media (max-width: 1000px) { .main-layout { grid-template-columns: 1fr; } }
+
+  .panel {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .panel-header {
+    background: var(--bg-tertiary);
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-secondary);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .panel-body { padding: 14px; }
+
+  .chart-wrapper {
+    background: #131722;
+    border-radius: 4px;
+    padding: 8px;
+    position: relative;
+    overflow: hidden;
+  }
+  svg.chart {
+    width: 100%;
+    height: 420px;
+    display: block;
+  }
+
+  /* Annotations overlay */
+  .annotation {
+    position: absolute;
+    background: rgba(38, 166, 154, 0.9);
+    color: white;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.4s;
+    z-index: 10;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+  }
+  .annotation.visible { opacity: 1; }
+  .annotation.bearish { background: rgba(239, 83, 80, 0.9); }
+  .annotation.warn { background: rgba(245, 166, 35, 0.9); color: #1a1a1a; }
+
+  /* Controls */
+  .controls {
+    display: flex;
+    gap: 8px;
+    padding: 10px 14px;
+    background: var(--bg-tertiary);
+    border-top: 1px solid var(--border);
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .btn {
+    background: var(--accent-blue);
+    color: white;
+    border: none;
+    padding: 8px 14px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn:hover { background: #1a4fcc; }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn.secondary { background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border); }
+  .btn.success { background: var(--bull); }
+  .btn.warn { background: var(--warn); color: #1a1a1a; }
+
+  .speed-select {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    border: 1px solid var(--border);
+    padding: 6px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+  }
+
+  .progress-bar {
+    flex: 1;
+    height: 4px;
+    background: var(--bg-primary);
+    border-radius: 2px;
+    overflow: hidden;
+    min-width: 150px;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--bull), var(--accent-blue));
+    width: 0%;
+    transition: width 0.3s;
+  }
+
+  .step-info {
+    padding: 12px 16px;
+    background: var(--bg-tertiary);
+    border-top: 1px solid var(--border);
+    min-height: 80px;
+  }
+  .step-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--accent-blue);
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .step-num {
+    background: var(--accent-blue);
+    color: white;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+  }
+  .step-desc {
+    font-size: 13px;
+    color: var(--text-primary);
+    line-height: 1.5;
+  }
+  .step-desc strong { color: var(--gold); }
+
+  /* Timeline steps */
+  .steps-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .step-item {
+    padding: 10px 12px;
+    background: var(--bg-tertiary);
+    border-radius: 6px;
+    border-left: 3px solid var(--border);
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 12px;
+  }
+  .step-item:hover { background: var(--bg-primary); }
+  .step-item.active {
+    border-left-color: var(--accent-blue);
+    background: var(--bg-primary);
+  }
+  .step-item.done {
+    border-left-color: var(--bull);
+    opacity: 0.7;
+  }
+  .step-item-title {
+    font-weight: 600;
+    margin-bottom: 2px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .step-item-tag {
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 3px;
+    background: var(--bg-primary);
+    color: var(--text-muted);
+  }
+  .step-item.active .step-item-tag { background: var(--accent-blue); color: white; }
+  .step-item-desc {
+    color: var(--text-muted);
+    font-size: 11px;
+  }
+
+  /* Entry/SL/TP info */
+  .trade-panel {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-top: 12px;
+  }
+  .trade-card {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 10px;
+    text-align: center;
+  }
+  .trade-card h4 {
+    font-size: 10px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+  }
+  .trade-card .val { font-size: 14px; font-weight: 700; }
+  .trade-card .val.entry { color: var(--accent-blue); }
+  .trade-card .val.sl { color: var(--bear); }
+  .trade-card .val.tp { color: var(--bull); }
+
+  .highlight-box {
+    background: linear-gradient(135deg, rgba(41, 98, 255, 0.15), rgba(41, 98, 255, 0.05));
+    border: 1px solid var(--accent-blue);
+    border-radius: 6px;
+    padding: 12px 14px;
+    margin-top: 12px;
+  }
+  .highlight-box strong { color: var(--accent-blue); }
+
+  /* Recap final */
+  .recap {
+    margin-top: 16px;
+    display: none;
+  }
+  .recap.visible { display: block; }
+  .recap-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 10px;
+  }
+  .recap-card {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 12px;
+    text-align: center;
+  }
+  .recap-card .label {
+    font-size: 10px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .recap-card .value {
+    font-size: 18px;
+    font-weight: 700;
+  }
+  .recap-card .value.bull { color: var(--bull); }
+  .recap-card .value.bear { color: var(--bear); }
+
+  .footer {
+    text-align: center;
+    padding: 16px;
+    color: var(--text-muted);
+    font-size: 11px;
+    border-top: 1px solid var(--border);
+    margin-top: 20px;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <h1>🎓 Nodex V4.0 — Formation Interactive</h1>
+    <div class="subtitle">Simulation animée · Comment entrer sur le marché étape par étape</div>
+  </div>
+  <div class="badges">
+    <span class="badge tf">M15</span>
+    <span class="badge bull">LONG ONLY</span>
+    <span class="badge tf">Risk 1,25%</span>
+    <span class="badge live" id="live-badge" style="display:none;">● EN COURS</span>
+  </div>
+</div>
+
+<!-- REMOTION VIDEO PLAYER -->
+<div class="panel" style="margin: 0 18px 18px 18px;">
+  <div class="panel-header">
+    <span>🎬 Vidéo Formation Nodex V4.0 — Simulation animée Remotion</span>
+    <span style="color: var(--text-muted); font-size:11px;">3 min · 1080p · Made with Remotion</span>
+  </div>
+  <div class="panel-body" style="padding: 0;">
+    <video
+      id="nodex-video"
+      controls
+      preload="metadata"
+      style="width: 100%; display: block; background: #0f1720; border-radius: 0 0 8px 8px;"
+      poster="">
+      <source src="nodex-v4.0-formation.mp4" type="video/mp4">
+      Ta navigateur ne supporte pas la vidéo HTML5.
+    </video>
+    <div style="padding: 12px 16px; background: rgba(38,166,154,0.08); border-top: 1px solid var(--border); font-size: 13px; color: var(--text-muted);">
+      💡 <strong style="color: var(--text);">Regarde la vidéo d'abord</strong> pour comprendre le setup complet en 3 minutes, puis utilise la simulation interactive ci-dessous pour revoir les étapes à ton rythme.
+    </div>
+  </div>
+</div>
+
+<div class="main-layout">
+
+  <!-- CHART ANIMATED -->
+  <div class="panel">
+    <div class="panel-header">
+      <span>📊 TAO/USDT · M15 · NYAM Simulation</span>
+      <span id="bar-counter" style="color: var(--text-muted); font-size:11px;">Bougie 0 / 0</span>
+    </div>
+    <div class="panel-body" style="padding: 8px;">
+      <div class="chart-wrapper" id="chart-wrapper">
+        <svg class="chart" id="chart" viewBox="0 0 900 420" preserveAspectRatio="none">
+          <defs>
+            <pattern id="grid" width="60" height="40" patternUnits="userSpaceOnUse">
+              <path d="M 60 0 L 0 0 0 40" fill="none" stroke="#1d2636" stroke-width="0.5"/>
+            </pattern>
+            <linearGradient id="fvgGrad" x1="0" x2="0" y1="0" y2="1">
+              <stop offset="0%" stop-color="#26a69a" stop-opacity="0.35"/>
+              <stop offset="100%" stop-color="#26a69a" stop-opacity="0.1"/>
+            </linearGradient>
+          </defs>
+          <rect width="900" height="420" fill="#131722"/>
+          <rect width="900" height="420" fill="url(#grid)"/>
+          <!-- Candles will be injected here by JS -->
+          <g id="candles-group"></g>
+          <!-- Annotations -->
+          <g id="annotations-group"></g>
+        </svg>
+      </div>
+
+      <div class="controls">
+        <button class="btn success" id="btn-play">▶ Lancer la démo</button>
+        <button class="btn secondary" id="btn-pause" disabled>⏸ Pause</button>
+        <button class="btn secondary" id="btn-reset">⏮ Recommencer</button>
+        <button class="btn secondary" id="btn-next">⏭ Étape suivante</button>
+        <select class="speed-select" id="speed">
+          <option value="2000">Lent (2s)</option>
+          <option value="1200" selected>Normal (1,2s)</option>
+          <option value="600">Rapide (0,6s)</option>
+          <option value="300">Très rapide (0,3s)</option>
+        </select>
+        <div class="progress-bar"><div class="progress-fill" id="progress"></div></div>
+      </div>
+
+      <div class="step-info">
+        <div class="step-title" id="step-title"><span class="step-num" id="step-num">0</span> <span id="step-name">Clique "Lancer la démo" pour commencer</span></div>
+        <div class="step-desc" id="step-desc">La simulation va te guider à travers un setup V4.0 complet sur TAO/USDT en NYAM. Chaque zone importante sera annotée en temps réel.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEPS LIST + TRADE INFO -->
+  <div class="panel">
+    <div class="panel-header">
+      <span>📋 7 étapes de la stratégie V4.0</span>
+    </div>
+    <div class="panel-body">
+      <div class="steps-list" id="steps-list">
+        <!-- Injected by JS -->
+      </div>
+
+      <div class="highlight-box" style="margin-top: 16px;">
+        <div style="font-weight: 600; margin-bottom: 6px;">💡 Rappel checklist</div>
+        <div style="font-size: 12px; color: var(--text-secondary);">
+          Il faut <strong>minimum 5/9 points</strong> cochés pour prendre le trade. Mais <strong>3 sont obligatoires</strong> : HTF bullish, session NYAM, pas de news.
+        </div>
+      </div>
+
+      <div class="trade-panel" id="trade-panel" style="display: none;">
+        <div class="trade-card">
+          <h4>Entry</h4>
+          <div class="val entry" id="entry-price">—</div>
+        </div>
+        <div class="trade-card">
+          <h4>Stop Loss</h4>
+          <div class="val sl" id="sl-price">—</div>
+        </div>
+        <div class="trade-card">
+          <h4>Take Profit</h4>
+          <div class="val tp" id="tp-price">—</div>
+        </div>
+      </div>
+
+      <div class="recap" id="recap">
+        <div class="panel-header" style="margin-top: 20px; border-top: 1px solid var(--border); padding-top: 12px; background: transparent;">
+          <span>🏆 Résultat du trade simulé</span>
+        </div>
+        <div class="recap-grid" style="margin-top: 12px;">
+          <div class="recap-card">
+            <div class="label">Niveau</div>
+            <div class="value bull" id="recap-level">A+</div>
+          </div>
+          <div class="recap-card">
+            <div class="label">RR obtenu</div>
+            <div class="value bull" id="recap-rr">2:1</div>
+          </div>
+          <div class="recap-card">
+            <div class="label">P&L</div>
+            <div class="value bull" id="recap-pnl">+2,5%</div>
+          </div>
+          <div class="recap-card">
+            <div class="label">Durée</div>
+            <div class="value" id="recap-duration">~2h</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="footer">
+  Nodex V4.0 Formation Interactive · 2026-04-23 · Simulation pour backtest manuel<br>
+  À ouvrir avant chaque session pour rester sur ta méthode
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════
+// DONNÉES SIMULATION
+// ═══════════════════════════════════════════════════════════════════
+
+// Chaque bougie : {x, open, high, low, close, color}
+// On raconte l'histoire d'un setup CLT+Hugo FX complet sur TAO
+
+const SVG_WIDTH = 900;
+const SVG_HEIGHT = 420;
+const CHART_TOP = 30;
+const CHART_BOTTOM = 380;
+const PRICE_MIN = 240;
+const PRICE_MAX = 252;
+
+// Helpers
+const priceToY = p => CHART_BOTTOM - ((p - PRICE_MIN) / (PRICE_MAX - PRICE_MIN)) * (CHART_BOTTOM - CHART_TOP);
+
+// 50 bougies racontant le setup complet
+// Phase 1 : consolidation (0-10)
+// Phase 2 : descente vers sweep (11-18)
+// Phase 3 : sweep + reversal (19-22)
+// Phase 4 : displacement bullish (23-27)
+// Phase 5 : FVG créée et retrace (28-33)
+// Phase 6 : bougie 2 confirmation (34-36)
+// Phase 7 : continuation vers TP (37-50)
+
+const CANDLES = [
+  // Phase 1 : range calme
+  {o: 246, h: 246.5, l: 245.5, c: 246.2}, {o: 246.2, h: 246.8, l: 245.8, c: 246.5},
+  {o: 246.5, h: 247, l: 246, c: 246.3}, {o: 246.3, h: 246.7, l: 245.9, c: 246.0},
+  {o: 246.0, h: 246.4, l: 245.6, c: 246.2}, {o: 246.2, h: 246.6, l: 245.8, c: 246.4},
+  {o: 246.4, h: 246.8, l: 246.0, c: 246.6}, {o: 246.6, h: 247.0, l: 246.2, c: 246.3},
+  {o: 246.3, h: 246.5, l: 245.7, c: 245.9}, {o: 245.9, h: 246.2, l: 245.5, c: 245.7},
+  {o: 245.7, h: 246.0, l: 245.4, c: 245.5},
+  // Phase 2 : descente vers Asia Low (création liquidity)
+  {o: 245.5, h: 245.7, l: 245.0, c: 245.1}, {o: 245.1, h: 245.4, l: 244.7, c: 244.9},
+  {o: 244.9, h: 245.2, l: 244.5, c: 244.7}, {o: 244.7, h: 244.9, l: 244.2, c: 244.3},
+  {o: 244.3, h: 244.6, l: 243.9, c: 244.1}, {o: 244.1, h: 244.4, l: 243.8, c: 244.0},
+  {o: 244.0, h: 244.3, l: 243.6, c: 243.8},
+  // Phase 3 : SWEEP de l'Asia Low à 243 (wick en bas puis reprise)
+  {o: 243.8, h: 244.0, l: 242.8, c: 243.5}, {o: 243.5, h: 243.8, l: 242.5, c: 243.6},
+  {o: 243.6, h: 244.1, l: 243.3, c: 244.0},
+  // Phase 4 : DISPLACEMENT BULLISH
+  {o: 244.0, h: 245.8, l: 243.9, c: 245.5}, {o: 245.5, h: 247.5, l: 245.3, c: 247.2},
+  {o: 247.2, h: 248.3, l: 247.0, c: 248.0},
+  // Phase 5 : FVG créée (entre bougie 23 et 25) - le prix retrace dedans
+  {o: 248.0, h: 248.5, l: 247.6, c: 247.8}, {o: 247.8, h: 248.0, l: 246.9, c: 247.0},
+  {o: 247.0, h: 247.3, l: 246.3, c: 246.5}, // mitigation wick
+  {o: 246.5, h: 247.0, l: 246.2, c: 246.8}, // close dans la FVG
+  // Phase 6 : BOUGIE 2 confirme (ferme au-dessus du high de la mitigation)
+  {o: 246.8, h: 248.3, l: 246.7, c: 248.1}, // BOUGIE 2 bullish
+  {o: 248.1, h: 248.5, l: 247.9, c: 248.4},
+  // Phase 7 : continuation vers TP
+  {o: 248.4, h: 248.9, l: 248.3, c: 248.8}, {o: 248.8, h: 249.3, l: 248.6, c: 249.1},
+  {o: 249.1, h: 249.8, l: 249.0, c: 249.6}, // TP1 touché ici (RR 1:1)
+  {o: 249.6, h: 250.2, l: 249.4, c: 250.0}, {o: 250.0, h: 250.6, l: 249.7, c: 250.4},
+  {o: 250.4, h: 251.0, l: 250.2, c: 250.8}, {o: 250.8, h: 251.4, l: 250.6, c: 251.2}, // TP2 presque
+  {o: 251.2, h: 251.7, l: 250.9, c: 251.5},
+];
+
+// ═══════════════════════════════════════════════════════════════════
+// ÉTAPES DE LA FORMATION (timing = index de bougie)
+// ═══════════════════════════════════════════════════════════════════
+
+const STEPS = [
+  {
+    atBar: 0,
+    title: "Préparation session NYAM",
+    desc: "On est <strong>avant 14h30 Paris</strong>. Le marché est calme, en range. On marque les niveaux clés : <strong>Asia High/Low, London High/Low, PDH/PDL</strong>.",
+    tag: "CONTEXTE",
+    annotations: [
+      {type: "hline", y: 247, color: "#8595a6", label: "Asia High ~247", labelX: 60}
+    ]
+  },
+  {
+    atBar: 10,
+    title: "Marché descend vers Asia Low",
+    desc: "Le prix glisse progressivement vers l'<strong>Asia Low à 243</strong>. C'est <strong>la zone où sont stockés les stops des acheteurs</strong> — les institutions vont venir les chasser.",
+    tag: "OBSERVATION",
+    annotations: [
+      {type: "hline", y: 243, color: "#ef5350", label: "Asia Low 243 (zone de stops)", labelX: 60}
+    ]
+  },
+  {
+    atBar: 19,
+    title: "🎯 LIQUIDITY SWEEP !",
+    desc: "La bougie casse <strong>sous l'Asia Low (242,8)</strong> avec un wick puis <strong>ferme au-dessus</strong>. C'est le <strong>sweep de liquidité</strong> — les institutions ont pris les stops des retails.",
+    tag: "CLT #1",
+    annotations: [
+      {type: "arrow", x: 340, y: 340, text: "SWEEP !", color: "#f5a623"},
+      {type: "hline", y: 243, color: "#ef5350"}
+    ]
+  },
+  {
+    atBar: 23,
+    title: "💥 DISPLACEMENT BULLISH",
+    desc: "<strong>3 bougies vertes puissantes</strong> après le sweep — range de plus de <strong>1,5× ATR</strong>. C'est la signature des institutions qui entrent long. Un <strong>FVG va se créer</strong>.",
+    tag: "CLT #2",
+    annotations: [
+      {type: "arrow", x: 440, y: 220, text: "DISPLACEMENT", color: "#26a69a"}
+    ]
+  },
+  {
+    atBar: 26,
+    title: "🎁 FVG CRÉÉE",
+    desc: "Le displacement laisse un <strong>Fair Value Gap</strong> (zone verte) : un déséquilibre entre bougie N-2 et bougie N. <strong>Le prix va venir le remplir</strong> — c'est notre zone d'entry.",
+    tag: "CLT #3",
+    annotations: [
+      {type: "fvg", yTop: 246.5, yBot: 245.0, label: "FVG bullish"}
+    ]
+  },
+  {
+    atBar: 28,
+    title: "🎯 MITIGATION DE LA FVG",
+    desc: "Le prix <strong>retrace dans la FVG</strong>. La bougie fait un wick à 246,3 (dans la zone) puis <strong>close à 246,5</strong>. C'est une <strong>mitigation Close</strong> = le meilleur signal.",
+    tag: "CLT #4",
+    annotations: [
+      {type: "fvg", yTop: 246.5, yBot: 245.0, label: "FVG mitigée"},
+      {type: "arrow", x: 530, y: 290, text: "MITIGATION", color: "#2962ff"}
+    ]
+  },
+  {
+    atBar: 30,
+    title: "✅ BOUGIE 2 CONFIRME",
+    desc: "Bougie suivante : <strong>ferme à 248,1</strong> — <strong>au-dessus du high de la bougie de mitigation (247,0)</strong>. C'est le <strong>signal Hugo FX</strong> — on a notre confirmation.",
+    tag: "HUGO FX",
+    annotations: [
+      {type: "arrow", x: 570, y: 180, text: "BOUGIE 2 ✓", color: "#26a69a"}
+    ]
+  },
+  {
+    atBar: 30,
+    title: "🎯 ENTRY LONG",
+    desc: "On rentre au close de la bougie 2 = <strong>248,1</strong>. <strong>SL à 242,5</strong> (sous le low du sweep). <strong>TP1 à 249,7</strong> (RR 1:1) puis <strong>TP2 à 251,3</strong> (RR 2:1 vers PDH).",
+    tag: "ENTRY",
+    showTrade: true,
+    entry: 248.1,
+    sl: 242.5,
+    tp: 251.3,
+    annotations: [
+      {type: "hline", y: 248.1, color: "#2962ff", label: "ENTRY 248,1", labelX: 680},
+      {type: "hline", y: 242.5, color: "#ef5350", label: "SL 242,5", labelX: 680},
+      {type: "hline", y: 251.3, color: "#26a69a", label: "TP2 251,3", labelX: 680}
+    ]
+  },
+  {
+    atBar: 34,
+    title: "🎯 TP1 TOUCHÉ (RR 1:1)",
+    desc: "Le prix atteint <strong>249,7 = RR 1:1</strong>. On sort <strong>50% de la position</strong> et on <strong>déplace le SL à entry (BE)</strong> — position désormais <strong>risk-free</strong>.",
+    tag: "GESTION",
+    showTrade: true,
+    entry: 248.1,
+    sl: 248.1,  // SL remonté à BE
+    tp: 251.3,
+    annotations: [
+      {type: "hline", y: 249.7, color: "#f5a623", label: "TP1 ✓ (50% + BE)", labelX: 680},
+      {type: "hline", y: 248.1, color: "#26a69a", label: "SL → BE", labelX: 680},
+      {type: "hline", y: 251.3, color: "#26a69a", label: "TP2 target", labelX: 680}
+    ]
+  },
+  {
+    atBar: 38,
+    title: "🏆 TP2 TOUCHÉ (RR 2:1)",
+    desc: "Le prix atteint <strong>251,3</strong>. On sort les <strong>50% restants</strong>. <strong>Trade total : +2,5%</strong> (50% à +1R + 50% à +2R). <strong>Setup A+ réussi.</strong>",
+    tag: "TP2 !",
+    showTrade: true,
+    showRecap: true,
+    annotations: [
+      {type: "arrow", x: 770, y: 80, text: "TP2 🏆", color: "#26a69a"}
+    ]
+  }
+];
+
+// ═══════════════════════════════════════════════════════════════════
+// MOTEUR D'ANIMATION
+// ═══════════════════════════════════════════════════════════════════
+
+const state = {
+  currentBar: 0,
+  currentStep: 0,
+  playing: false,
+  paused: false,
+  interval: null,
+  speed: 1200
+};
+
+const $ = id => document.getElementById(id);
+
+function candleX(i) {
+  return 40 + (i / (CANDLES.length - 1)) * (SVG_WIDTH - 120);
+}
+
+function candleWidth() {
+  return Math.max(5, (SVG_WIDTH - 120) / CANDLES.length * 0.7);
+}
+
+function drawCandle(candle, index) {
+  const x = candleX(index);
+  const w = candleWidth();
+  const yOpen = priceToY(candle.o);
+  const yClose = priceToY(candle.c);
+  const yHigh = priceToY(candle.h);
+  const yLow = priceToY(candle.l);
+  const isBull = candle.c >= candle.o;
+  const color = isBull ? "#26a69a" : "#ef5350";
+
+  const bodyTop = Math.min(yOpen, yClose);
+  const bodyHeight = Math.max(1, Math.abs(yClose - yOpen));
+
+  return `
+    <g class="candle" opacity="0">
+      <line x1="${x + w/2}" y1="${yHigh}" x2="${x + w/2}" y2="${yLow}" stroke="${color}" stroke-width="1"/>
+      <rect x="${x}" y="${bodyTop}" width="${w}" height="${bodyHeight}" fill="${color}"/>
+    </g>
+  `;
+}
+
+function drawAnnotation(ann, step) {
+  if (ann.type === "hline") {
+    const y = priceToY(ann.y);
+    const label = ann.label || "";
+    const labelX = ann.labelX || 60;
+    return `
+      <g class="annotation-el">
+        <line x1="40" y1="${y}" x2="${SVG_WIDTH - 40}" y2="${y}" stroke="${ann.color}" stroke-width="1" stroke-dasharray="4 3" opacity="0.8"/>
+        <text x="${labelX}" y="${y - 4}" fill="${ann.color}" font-size="11" font-weight="600">${label}</text>
+      </g>
+    `;
+  }
+  if (ann.type === "arrow") {
+    return `
+      <g class="annotation-el">
+        <rect x="${ann.x - 45}" y="${ann.y - 15}" width="90" height="22" rx="4" fill="${ann.color}" opacity="0.95"/>
+        <text x="${ann.x}" y="${ann.y}" text-anchor="middle" fill="white" font-size="11" font-weight="700">${ann.text}</text>
+      </g>
+    `;
+  }
+  if (ann.type === "fvg") {
+    const yTop = priceToY(ann.yTop);
+    const yBot = priceToY(ann.yBot);
+    return `
+      <g class="annotation-el">
+        <rect x="${candleX(24)}" y="${yTop}" width="${candleX(40) - candleX(24)}" height="${yBot - yTop}" fill="url(#fvgGrad)" stroke="#26a69a" stroke-width="1" stroke-dasharray="3 2"/>
+        <text x="${candleX(35)}" y="${(yTop + yBot) / 2}" fill="#26a69a" font-size="11" font-weight="700" text-anchor="middle">${ann.label}</text>
+      </g>
+    `;
+  }
+  return "";
+}
+
+function renderChart() {
+  const candlesGroup = $("candles-group");
+  let html = "";
+  for (let i = 0; i <= state.currentBar && i < CANDLES.length; i++) {
+    html += drawCandle(CANDLES[i], i);
+  }
+  candlesGroup.innerHTML = html;
+  // Fade in animation
+  setTimeout(() => {
+    const candles = candlesGroup.querySelectorAll(".candle");
+    candles.forEach((c, i) => {
+      c.style.transition = "opacity 0.3s";
+      c.style.opacity = "1";
+    });
+  }, 10);
+
+  // Update bar counter
+  $("bar-counter").textContent = `Bougie ${state.currentBar + 1} / ${CANDLES.length}`;
+
+  // Progress bar
+  const progress = ((state.currentBar + 1) / CANDLES.length) * 100;
+  $("progress").style.width = progress + "%";
+}
+
+function renderAnnotations() {
+  const step = STEPS[state.currentStep];
+  if (!step) return;
+  const annGroup = $("annotations-group");
+  let html = "";
+  if (step.annotations) {
+    step.annotations.forEach(ann => {
+      html += drawAnnotation(ann);
+    });
+  }
+  annGroup.innerHTML = html;
+}
+
+function renderStepInfo() {
+  const step = STEPS[state.currentStep];
+  if (!step) return;
+
+  $("step-num").textContent = state.currentStep + 1;
+  $("step-name").innerHTML = step.title;
+  $("step-desc").innerHTML = step.desc;
+
+  // Trade panel
+  if (step.showTrade) {
+    $("trade-panel").style.display = "grid";
+    $("entry-price").textContent = step.entry ? step.entry.toFixed(2) : "—";
+    $("sl-price").textContent = step.sl ? step.sl.toFixed(2) : "—";
+    $("tp-price").textContent = step.tp ? step.tp.toFixed(2) : "—";
+  }
+
+  // Recap
+  if (step.showRecap) {
+    $("recap").classList.add("visible");
+  }
+
+  // Update steps list
+  renderStepsList();
+}
+
+function renderStepsList() {
+  const list = $("steps-list");
+  let html = "";
+  STEPS.forEach((s, i) => {
+    const cls = i === state.currentStep ? "active" : (i < state.currentStep ? "done" : "");
+    html += `
+      <div class="step-item ${cls}" data-step="${i}">
+        <div class="step-item-title">
+          ${i + 1}. ${s.title} <span class="step-item-tag">${s.tag}</span>
+        </div>
+        <div class="step-item-desc">${s.desc.replace(/<\/?strong>/g, "")}</div>
+      </div>
+    `;
+  });
+  list.innerHTML = html;
+  // Click handlers
+  list.querySelectorAll(".step-item").forEach(el => {
+    el.addEventListener("click", () => {
+      const stepIdx = parseInt(el.dataset.step);
+      goToStep(stepIdx);
+    });
+  });
+}
+
+function goToStep(idx) {
+  stopPlay();
+  state.currentStep = idx;
+  state.currentBar = STEPS[idx].atBar;
+  renderChart();
+  renderAnnotations();
+  renderStepInfo();
+}
+
+function advanceBar() {
+  state.currentBar++;
+  if (state.currentBar >= CANDLES.length) {
+    stopPlay();
+    return;
+  }
+  renderChart();
+
+  // Check if we hit a step
+  const nextStep = STEPS.findIndex(s => s.atBar === state.currentBar);
+  if (nextStep !== -1 && nextStep !== state.currentStep) {
+    state.currentStep = nextStep;
+    renderAnnotations();
+    renderStepInfo();
+    // Pause at important steps
+    pausePlay();
+    setTimeout(() => {
+      if (state.playing && !state.paused) resumePlay();
+    }, 2500);
+  }
+}
+
+function startPlay() {
+  state.playing = true;
+  state.paused = false;
+  $("live-badge").style.display = "inline-block";
+  $("btn-play").disabled = true;
+  $("btn-pause").disabled = false;
+  state.speed = parseInt($("speed").value);
+  state.interval = setInterval(advanceBar, state.speed);
+}
+
+function pausePlay() {
+  state.paused = true;
+  clearInterval(state.interval);
+  state.interval = null;
+}
+
+function resumePlay() {
+  state.paused = false;
+  state.interval = setInterval(advanceBar, state.speed);
+}
+
+function stopPlay() {
+  state.playing = false;
+  state.paused = false;
+  clearInterval(state.interval);
+  state.interval = null;
+  $("live-badge").style.display = "none";
+  $("btn-play").disabled = false;
+  $("btn-pause").disabled = true;
+}
+
+function resetAll() {
+  stopPlay();
+  state.currentBar = 0;
+  state.currentStep = 0;
+  $("trade-panel").style.display = "none";
+  $("recap").classList.remove("visible");
+  renderChart();
+  renderAnnotations();
+  renderStepInfo();
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// EVENT HANDLERS
+// ═══════════════════════════════════════════════════════════════════
+
+$("btn-play").addEventListener("click", () => {
+  if (state.playing && state.paused) {
+    resumePlay();
+  } else if (!state.playing) {
+    if (state.currentBar === 0) {
+      // Fresh start
+      state.currentStep = 0;
+      renderStepInfo();
+    }
+    startPlay();
+  }
+});
+
+$("btn-pause").addEventListener("click", () => {
+  if (state.playing && !state.paused) pausePlay();
+});
+
+$("btn-reset").addEventListener("click", resetAll);
+
+$("btn-next").addEventListener("click", () => {
+  if (state.currentStep < STEPS.length - 1) {
+    goToStep(state.currentStep + 1);
+  }
+});
+
+$("speed").addEventListener("change", (e) => {
+  state.speed = parseInt(e.target.value);
+  if (state.playing && !state.paused) {
+    clearInterval(state.interval);
+    state.interval = setInterval(advanceBar, state.speed);
+  }
+});
+
+// ═══════════════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════════════
+
+renderChart();
+renderStepsList();
+renderStepInfo();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,968 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nodex V5 — Setup SMC Visuel 16:9</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --tv-bg: #131722;
+  --tv-bg-2: #1e222d;
+  --tv-bg-3: #2a2e39;
+  --tv-grid: #1d2636;
+  --tv-text: #d1d4dc;
+  --tv-text-muted: #787b86;
+  --tv-border: #2a2e39;
+  --tv-green: #26a69a;
+  --tv-red: #ef5350;
+  --tv-blue: #2962ff;
+  --tv-yellow: #f5a623;
+  --tv-white: #ffffff;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  font-family: 'Geist', -apple-system, sans-serif;
+  background: #000;
+  color: var(--tv-text);
+  overflow: hidden;
+  width: 100%;
+  height: 100%;
+}
+
+/* 16:9 aspect ratio viewport */
+.viewport {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100vw;
+  height: calc(100vw * 9 / 16);
+  max-height: 100vh;
+  max-width: calc(100vh * 16 / 9);
+  background: var(--tv-bg);
+  display: grid;
+  grid-template-rows: 48px 1fr 60px;
+  grid-template-columns: 1fr 400px;
+  grid-template-areas:
+    "header header"
+    "chart panel"
+    "stats stats";
+  overflow: hidden;
+}
+
+/* HEADER */
+.header {
+  grid-area: header;
+  background: var(--tv-bg-2);
+  border-bottom: 1px solid var(--tv-border);
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  gap: 20px;
+}
+.symbol-info { display: flex; align-items: center; gap: 10px; }
+.symbol-name {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--tv-white);
+  letter-spacing: -0.3px;
+}
+.symbol-tf {
+  padding: 2px 8px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--tv-border);
+  border-radius: 4px;
+  font-size: 11px;
+  color: var(--tv-text-muted);
+  font-family: 'Geist Mono', monospace;
+}
+.ohlc-mini {
+  display: flex;
+  gap: 12px;
+  font-family: 'Geist Mono', monospace;
+  font-size: 12px;
+}
+.ohlc-mini .it { display: flex; gap: 4px; }
+.ohlc-mini .k { color: var(--tv-text-muted); }
+.ohlc-mini .v { color: var(--tv-white); font-weight: 500; }
+.green { color: var(--tv-green) !important; }
+.red { color: var(--tv-red) !important; }
+.spacer { flex: 1; }
+.setup-title {
+  font-size: 13px;
+  color: var(--tv-text-muted);
+  font-weight: 500;
+}
+.setup-title strong {
+  color: var(--tv-white);
+}
+
+/* CHART */
+.chart-area {
+  grid-area: chart;
+  position: relative;
+  background: var(--tv-bg);
+  overflow: hidden;
+}
+.chart-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* PANEL */
+.panel {
+  grid-area: panel;
+  background: var(--tv-bg-2);
+  border-left: 1px solid var(--tv-border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.panel-header {
+  padding: 12px 18px;
+  background: var(--tv-bg-3);
+  border-bottom: 1px solid var(--tv-border);
+  font-size: 11px;
+  color: var(--tv-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  font-family: 'Geist Mono', monospace;
+  font-weight: 600;
+}
+.panel-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 18px;
+}
+.exp-step-num {
+  display: inline-block;
+  padding: 4px 10px;
+  background: var(--tv-blue);
+  color: white;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  font-family: 'Geist Mono', monospace;
+  letter-spacing: 1px;
+  margin-bottom: 10px;
+}
+.exp-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--tv-white);
+  margin-bottom: 10px;
+  letter-spacing: -0.3px;
+  line-height: 1.3;
+}
+.exp-text {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--tv-text);
+  margin-bottom: 12px;
+}
+.exp-text strong { color: var(--tv-white); }
+.exp-detail {
+  padding: 10px 12px;
+  background: rgba(41,98,255,0.07);
+  border-left: 3px solid var(--tv-blue);
+  border-radius: 0 6px 6px 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--tv-text);
+}
+.exp-detail code {
+  background: rgba(255,255,255,0.08);
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-family: 'Geist Mono', monospace;
+  font-size: 11px;
+  color: var(--tv-yellow);
+}
+
+/* CONTROLS */
+.controls {
+  padding: 12px;
+  background: var(--tv-bg-3);
+  border-top: 1px solid var(--tv-border);
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+.step-btn {
+  padding: 7px 8px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--tv-border);
+  border-radius: 5px;
+  color: var(--tv-text);
+  cursor: pointer;
+  font-family: 'Geist', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.step-btn:hover {
+  background: rgba(255,255,255,0.08);
+  border-color: rgba(255,255,255,0.2);
+}
+.step-btn.active {
+  background: var(--tv-blue);
+  border-color: var(--tv-blue);
+  color: white;
+}
+.step-btn.big {
+  grid-column: span 2;
+}
+.step-btn.play {
+  background: rgba(38,166,154,0.15);
+  border-color: var(--tv-green);
+  color: var(--tv-green);
+}
+.step-btn.reset {
+  background: rgba(239,83,80,0.1);
+  border-color: rgba(239,83,80,0.3);
+  color: var(--tv-red);
+}
+
+/* STATS BAR */
+.stats-bar {
+  grid-area: stats;
+  background: var(--tv-bg-2);
+  border-top: 1px solid var(--tv-border);
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  align-items: center;
+}
+.stat-cell {
+  padding: 10px 16px;
+  border-right: 1px solid var(--tv-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.stat-cell:last-child { border-right: none; }
+.stat-cell .stat-label {
+  font-size: 10px;
+  color: var(--tv-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-family: 'Geist Mono', monospace;
+}
+.stat-cell .stat-value {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--tv-white);
+  font-family: 'Geist Mono', monospace;
+}
+.stat-cell .stat-value.green { color: var(--tv-green); }
+.stat-cell .stat-value.red { color: var(--tv-red); }
+
+/* LEGEND */
+.legend {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  padding: 8px 10px;
+  background: rgba(19, 23, 34, 0.92);
+  border: 1px solid var(--tv-border);
+  border-radius: 5px;
+  font-size: 10px;
+  font-family: 'Geist Mono', monospace;
+  color: var(--tv-text);
+  backdrop-filter: blur(8px);
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  z-index: 10;
+}
+.legend-item { display: flex; align-items: center; gap: 6px; }
+.legend-swatch {
+  display: inline-block;
+  width: 12px;
+  height: 2px;
+  border-radius: 2px;
+}
+
+/* HOVER TOOLTIP */
+.candle-hover {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  padding: 8px 10px;
+  background: rgba(19, 23, 34, 0.95);
+  border: 1px solid var(--tv-border);
+  border-radius: 4px;
+  font-family: 'Geist Mono', monospace;
+  font-size: 10px;
+  line-height: 1.5;
+  color: var(--tv-text);
+  pointer-events: none;
+  display: none;
+  min-width: 140px;
+  z-index: 20;
+}
+.candle-hover.visible { display: block; }
+.candle-hover .row { display: flex; justify-content: space-between; gap: 12px; }
+.candle-hover .label { color: var(--tv-text-muted); }
+
+/* FULLSCREEN HINT */
+.fs-hint {
+  position: fixed;
+  bottom: 10px;
+  right: 10px;
+  padding: 6px 10px;
+  background: rgba(19, 23, 34, 0.8);
+  border: 1px solid var(--tv-border);
+  border-radius: 4px;
+  font-size: 10px;
+  color: var(--tv-text-muted);
+  font-family: 'Geist Mono', monospace;
+  z-index: 100;
+  cursor: pointer;
+}
+.fs-hint:hover {
+  color: var(--tv-white);
+  background: var(--tv-bg-2);
+}
+</style>
+</head>
+<body>
+
+<div class="fs-hint" id="fs-btn">⛶ Plein écran</div>
+
+<div class="viewport">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="symbol-info">
+      <span class="symbol-name">FET/USDT</span>
+      <span class="symbol-tf">15m</span>
+    </div>
+    <div class="ohlc-mini">
+      <div class="it"><span class="k">O</span><span class="v" id="price-o">0.2075</span></div>
+      <div class="it"><span class="k">H</span><span class="v green" id="price-h">0.2176</span></div>
+      <div class="it"><span class="k">L</span><span class="v red" id="price-l">0.2038</span></div>
+      <div class="it"><span class="k">C</span><span class="v" id="price-c">0.2185</span></div>
+    </div>
+    <div class="spacer"></div>
+    <div class="setup-title">🎯 Setup SMC — <strong>Sweep + FVG</strong> · Nodex V5</div>
+  </div>
+
+  <!-- CHART -->
+  <div class="chart-area">
+    <div class="legend" id="legend" style="display:none;">
+      <div class="legend-item"><span class="legend-swatch" style="background:#f87171;"></span>Liquidité</div>
+      <div class="legend-item"><span class="legend-swatch" style="background:#f5a623;"></span>Sweep low</div>
+      <div class="legend-item"><span class="legend-swatch" style="background:#4ade80;"></span>FVG bullish</div>
+      <div class="legend-item"><span class="legend-swatch" style="background:#2962ff;"></span>Entry</div>
+      <div class="legend-item"><span class="legend-swatch" style="background:#26a69a;"></span>TP1 / TP2</div>
+    </div>
+    <div class="candle-hover" id="candle-hover"></div>
+    <svg class="chart-svg" id="chart" viewBox="0 0 1600 792" preserveAspectRatio="none">
+      <defs>
+        <pattern id="grid" width="60" height="40" patternUnits="userSpaceOnUse">
+          <path d="M 60 0 L 0 0 0 40" fill="none" stroke="#1d2636" stroke-width="0.5"/>
+        </pattern>
+        <linearGradient id="fvgGrad" x1="0" x2="0" y1="0" y2="1">
+          <stop offset="0%" stop-color="#4ade80" stop-opacity="0.3"/>
+          <stop offset="100%" stop-color="#4ade80" stop-opacity="0.08"/>
+        </linearGradient>
+        <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur stdDeviation="4" result="b"/>
+          <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+        <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="5" refY="3" orient="auto">
+          <polygon points="0 0, 6 3, 0 6" fill="#f5a623"/>
+        </marker>
+      </defs>
+      <rect width="1600" height="792" fill="#131722"/>
+      <rect width="1600" height="792" fill="url(#grid)"/>
+      <g id="annotations-back"></g>
+      <g id="candles"></g>
+      <g id="annotations-front"></g>
+      <g id="price-labels"></g>
+    </svg>
+  </div>
+
+  <!-- PANEL (right) -->
+  <div class="panel">
+    <div class="panel-header">📖 Guide pédagogique</div>
+    <div class="panel-body">
+      <span class="exp-step-num" id="exp-num">ÉTAPE 1 / 7</span>
+      <h2 class="exp-title" id="exp-title">Le prix monte tranquillement</h2>
+      <p class="exp-text" id="exp-text">
+        Le marché démarre dans une consolidation haussière douce. Les petits traders (retail) voient le prix monter et commencent à acheter vers <strong>0,2100</strong>. Ils placent leur stop de sécurité juste sous le low récent.
+      </p>
+      <div class="exp-detail" id="exp-detail">
+        💡 <strong>Ce qu'il faut observer</strong> : une structure haussière avec des creux et sommets qui montent (HH+HL).
+      </div>
+    </div>
+    <div class="controls">
+      <button class="step-btn active" data-step="0">1 Contexte</button>
+      <button class="step-btn" data-step="1">2 Liquidité</button>
+      <button class="step-btn" data-step="2">3 Sweep</button>
+      <button class="step-btn" data-step="3">4 FVG</button>
+      <button class="step-btn" data-step="4">5 Mitigation</button>
+      <button class="step-btn" data-step="5">6 Entry</button>
+      <button class="step-btn" data-step="6">7 Target</button>
+      <button class="step-btn play big" id="play-btn">▶ Auto</button>
+      <button class="step-btn reset" id="reset-btn">⟲ Reset</button>
+    </div>
+  </div>
+
+  <!-- STATS BAR -->
+  <div class="stats-bar">
+    <div class="stat-cell">
+      <span class="stat-label">Entry</span>
+      <span class="stat-value">0.2085</span>
+    </div>
+    <div class="stat-cell">
+      <span class="stat-label">SL</span>
+      <span class="stat-value red">0.2035</span>
+    </div>
+    <div class="stat-cell">
+      <span class="stat-label">TP1 (RR 1:1)</span>
+      <span class="stat-value">0.2135</span>
+    </div>
+    <div class="stat-cell">
+      <span class="stat-label">TP2 (RR 2:1)</span>
+      <span class="stat-value green">0.2185</span>
+    </div>
+    <div class="stat-cell">
+      <span class="stat-label">Risk</span>
+      <span class="stat-value">2,4%</span>
+    </div>
+    <div class="stat-cell">
+      <span class="stat-label">Gain TP2</span>
+      <span class="stat-value green">+4,8%</span>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// NODEX V5 — Setup SMC Visuel 16:9
+// ═══════════════════════════════════════════════════════════════
+
+const CANDLES = [
+  // Phase 1: Consolidation haussière douce (0-9)
+  {o: 0.2075, h: 0.2083, l: 0.2070, c: 0.2081},
+  {o: 0.2081, h: 0.2088, l: 0.2079, c: 0.2087},
+  {o: 0.2087, h: 0.2088, l: 0.2072, c: 0.2074},
+  {o: 0.2074, h: 0.2077, l: 0.2068, c: 0.2075},
+  {o: 0.2075, h: 0.2077, l: 0.2073, c: 0.2077},
+  {o: 0.2076, h: 0.2091, l: 0.2075, c: 0.2091},
+  {o: 0.2091, h: 0.2098, l: 0.2089, c: 0.2097},
+  {o: 0.2097, h: 0.2103, l: 0.2094, c: 0.2097},
+  {o: 0.2098, h: 0.2104, l: 0.2098, c: 0.2100},
+  {o: 0.2100, h: 0.2110, l: 0.2099, c: 0.2108},
+  // Phase 2: Impulsion haussière (10-14)
+  {o: 0.2108, h: 0.2125, l: 0.2108, c: 0.2123},
+  {o: 0.2123, h: 0.2142, l: 0.2122, c: 0.2140},
+  {o: 0.2140, h: 0.2159, l: 0.2139, c: 0.2157},
+  {o: 0.2157, h: 0.2176, l: 0.2156, c: 0.2173},
+  {o: 0.2173, h: 0.2176, l: 0.2162, c: 0.2164},
+  // Phase 3: Descente (15-19)
+  {o: 0.2164, h: 0.2168, l: 0.2148, c: 0.2151},
+  {o: 0.2151, h: 0.2154, l: 0.2138, c: 0.2142},
+  {o: 0.2142, h: 0.2147, l: 0.2129, c: 0.2132},
+  {o: 0.2132, h: 0.2136, l: 0.2119, c: 0.2122},
+  {o: 0.2122, h: 0.2126, l: 0.2107, c: 0.2110},
+  // Phase 4: SWEEP (20-22)
+  {o: 0.2110, h: 0.2113, l: 0.2088, c: 0.2091},
+  {o: 0.2091, h: 0.2095, l: 0.2038, c: 0.2065},
+  {o: 0.2065, h: 0.2083, l: 0.2062, c: 0.2080},
+  // Phase 5: Displacement + FVG (23-26)
+  {o: 0.2080, h: 0.2092, l: 0.2077, c: 0.2090},
+  {o: 0.2090, h: 0.2108, l: 0.2090, c: 0.2105},
+  {o: 0.2105, h: 0.2115, l: 0.2103, c: 0.2112},
+  {o: 0.2112, h: 0.2118, l: 0.2108, c: 0.2115},
+  // Phase 6: Pullback Mitigation (27-31)
+  {o: 0.2115, h: 0.2117, l: 0.2102, c: 0.2105},
+  {o: 0.2105, h: 0.2107, l: 0.2095, c: 0.2098},
+  {o: 0.2098, h: 0.2100, l: 0.2087, c: 0.2089},
+  {o: 0.2089, h: 0.2091, l: 0.2082, c: 0.2085},
+  {o: 0.2085, h: 0.2094, l: 0.2083, c: 0.2093},
+  // Phase 7: Rally TP (32-39)
+  {o: 0.2093, h: 0.2108, l: 0.2092, c: 0.2106},
+  {o: 0.2106, h: 0.2122, l: 0.2105, c: 0.2120},
+  {o: 0.2120, h: 0.2135, l: 0.2118, c: 0.2133},
+  {o: 0.2133, h: 0.2148, l: 0.2131, c: 0.2145},
+  {o: 0.2145, h: 0.2163, l: 0.2144, c: 0.2160},
+  {o: 0.2160, h: 0.2178, l: 0.2159, c: 0.2175},
+  {o: 0.2175, h: 0.2188, l: 0.2173, c: 0.2185},
+  {o: 0.2185, h: 0.2188, l: 0.2178, c: 0.2181},
+];
+
+// Chart dimensions (adapté au viewBox 1600x792 = chart area du 16:9)
+const CHART_W = 1600;
+const CHART_H = 792;
+const PAD_L = 30;
+const PAD_R = 90;
+const PAD_T = 30;
+const PAD_B = 40;
+const CHART_INNER_W = CHART_W - PAD_L - PAD_R;
+const CHART_INNER_H = CHART_H - PAD_T - PAD_B;
+
+const PRICE_MIN = 0.2020;
+const PRICE_MAX = 0.2200;
+
+const priceToY = (p) => PAD_T + CHART_INNER_H - ((p - PRICE_MIN) / (PRICE_MAX - PRICE_MIN)) * CHART_INNER_H;
+const candleX = (i) => PAD_L + 20 + (i / Math.max(1, CANDLES.length - 1)) * (CHART_INNER_W - 40);
+const candleW = Math.max(10, ((CHART_INNER_W - 40) / CANDLES.length) * 0.72);
+
+function renderCandles(visibleIdx = CANDLES.length - 1, highlightRange = null) {
+  const g = document.getElementById('candles');
+  g.innerHTML = '';
+  CANDLES.slice(0, visibleIdx + 1).forEach((c, i) => {
+    const x = candleX(i);
+    const yH = priceToY(c.h);
+    const yL = priceToY(c.l);
+    const yO = priceToY(c.o);
+    const yC = priceToY(c.c);
+    const isBull = c.c >= c.o;
+    const color = isBull ? '#26a69a' : '#ef5350';
+    const bodyTop = Math.min(yO, yC);
+    const bodyHeight = Math.max(1, Math.abs(yC - yO));
+    const isHighlighted = highlightRange && i >= highlightRange[0] && i <= highlightRange[1];
+    const opacity = isHighlighted ? 1 : (highlightRange ? 0.35 : 1);
+
+    const group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+    group.setAttribute('opacity', opacity);
+    group.innerHTML = `
+      <line x1="${x + candleW/2}" y1="${yH}" x2="${x + candleW/2}" y2="${yL}" stroke="${color}" stroke-width="1.5"/>
+      <rect x="${x}" y="${bodyTop}" width="${candleW}" height="${bodyHeight}" fill="${color}" stroke="${color}" stroke-width="0.5"/>
+    `;
+    g.appendChild(group);
+
+    const hoverRect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    hoverRect.setAttribute('x', x - 2);
+    hoverRect.setAttribute('y', 0);
+    hoverRect.setAttribute('width', candleW + 4);
+    hoverRect.setAttribute('height', CHART_H);
+    hoverRect.setAttribute('fill', 'transparent');
+    hoverRect.style.cursor = 'crosshair';
+    hoverRect.addEventListener('mouseenter', () => showCandleInfo(c, i));
+    hoverRect.addEventListener('mouseleave', () => hideCandleInfo());
+    g.appendChild(hoverRect);
+  });
+}
+
+function showCandleInfo(c, i) {
+  const el = document.getElementById('candle-hover');
+  const change = ((c.c - c.o) / c.o * 100).toFixed(2);
+  const changeClass = c.c >= c.o ? 'green' : 'red';
+  el.innerHTML = `
+    <div class="row"><span class="label">#</span><span>${i + 1}</span></div>
+    <div class="row"><span class="label">O</span><span>${c.o.toFixed(4)}</span></div>
+    <div class="row"><span class="label">H</span><span class="green">${c.h.toFixed(4)}</span></div>
+    <div class="row"><span class="label">L</span><span class="red">${c.l.toFixed(4)}</span></div>
+    <div class="row"><span class="label">C</span><span>${c.c.toFixed(4)}</span></div>
+    <div class="row"><span class="label">Δ</span><span class="${changeClass}">${change > 0 ? '+' : ''}${change}%</span></div>
+  `;
+  el.classList.add('visible');
+}
+
+function hideCandleInfo() {
+  document.getElementById('candle-hover').classList.remove('visible');
+}
+
+function renderPriceLabels() {
+  const g = document.getElementById('price-labels');
+  g.innerHTML = '';
+  const prices = [0.204, 0.208, 0.212, 0.216, 0.220];
+  prices.forEach(p => {
+    const y = priceToY(p);
+    const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    text.setAttribute('x', CHART_W - PAD_R + 8);
+    text.setAttribute('y', y + 4);
+    text.setAttribute('fill', '#787b86');
+    text.setAttribute('font-size', '12');
+    text.setAttribute('font-family', 'Geist Mono, monospace');
+    text.textContent = p.toFixed(4);
+    g.appendChild(text);
+
+    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    line.setAttribute('x1', PAD_L);
+    line.setAttribute('y1', y);
+    line.setAttribute('x2', CHART_W - PAD_R);
+    line.setAttribute('y2', y);
+    line.setAttribute('stroke', '#1d2636');
+    line.setAttribute('stroke-dasharray', '2,3');
+    line.setAttribute('opacity', '0.5');
+    g.appendChild(line);
+  });
+}
+
+const STEPS = [
+  {
+    num: 1,
+    title: 'Le prix monte tranquillement',
+    text: 'Consolidation haussière douce. Les petits traders (retail) achètent vers <strong>0,2100</strong> et placent leur stop juste sous le low récent à <strong>0,2067</strong>.',
+    detail: '💡 <strong>Observe</strong> : structure haussière avec creux et sommets qui montent (HH+HL). C\'est le "bon" sens pour un long plus tard.',
+    visibleUntil: 14,
+    highlight: [0, 14]
+  },
+  {
+    num: 2,
+    title: 'La liquidité se forme sous le low',
+    text: 'Des centaines de traders ont acheté entre 0,2070 et 0,2100. Ils placent tous leur stop sous le low à <strong>0,2067</strong>. C\'est là que se cache la <strong>liquidité</strong> = masse de stops prête à se déclencher.',
+    detail: '💰 <strong>Zone liquidité</strong> : entre <code>0,2055</code> et <code>0,2065</code>. Les baleines voient cette accumulation.',
+    visibleUntil: 20,
+    highlight: [0, 20],
+    drawLiquidity: true
+  },
+  {
+    num: 3,
+    title: '🎯 LE SWEEP — Le piège claque',
+    text: 'Les institutions poussent le prix vers le bas. Longue mèche qui descend à <strong>0,2038</strong>. 💥 <strong>Tous les stops se déclenchent</strong>. Les retail perdent, les institutions rachètent à prix cassé.',
+    detail: '✅ <strong>3 critères du sweep OK</strong> : (1) niveau significatif cassé, (2) longue mèche de rejet, (3) rebond immédiat.',
+    visibleUntil: 22,
+    highlight: [20, 22],
+    drawLiquidity: true,
+    drawSweep: true
+  },
+  {
+    num: 4,
+    title: '🕳️ La FVG se forme',
+    text: 'Après le sweep, le prix remonte si vite que 3 bougies créent un <strong>vide</strong> entre <strong>0,2065</strong> et <strong>0,2090</strong>. Ce vide = <strong>FVG (Fair Value Gap)</strong>. Le marché DOIT revenir le combler.',
+    detail: '📦 <strong>FVG bullish</strong> : zone <code>0,2065 — 0,2090</code>. C\'est notre future zone d\'entrée.',
+    visibleUntil: 26,
+    highlight: [22, 26],
+    drawLiquidity: true,
+    drawSweep: true,
+    drawFVG: true
+  },
+  {
+    num: 5,
+    title: 'Le prix revient combler la FVG',
+    text: 'Comme un coureur essoufflé qui revient respirer, le prix redescend dans la FVG. Bougie après bougie, il vient toucher la zone <strong>0,2085-0,2090</strong>. C\'est la <strong>mitigation</strong>.',
+    detail: '🎯 <strong>La mitigation = signal d\'entrée</strong>. On attend une bougie 2 de confirmation (plus haute que la précédente).',
+    visibleUntil: 30,
+    highlight: [27, 30],
+    drawLiquidity: true,
+    drawSweep: true,
+    drawFVG: true
+  },
+  {
+    num: 6,
+    title: '🎯 ENTRY LONG à 0,2085',
+    text: 'Bougie 2 confirme : close à <strong>0,2093</strong>, plus haute que la précédente. Entry long à <strong>0,2085</strong>.<br><br>• <strong>SL</strong> sous sweep à <strong>0,2035</strong><br>• <strong>TP1</strong> à <strong>0,2135</strong> (RR 1:1, sortir 50% + SL à BE)<br>• <strong>TP2</strong> à <strong>0,2185</strong> (RR 2:1)',
+    detail: '💼 <strong>Paramètres</strong> : risque 2,4% par position. Gain potentiel au TP2 si risk 1% du capital = <code>+2,0% net</code>.',
+    visibleUntil: 31,
+    highlight: [30, 31],
+    drawLiquidity: true,
+    drawSweep: true,
+    drawFVG: true,
+    drawEntry: true
+  },
+  {
+    num: 7,
+    title: '🏆 TP2 atteint — Mission réussie',
+    text: 'Prix repart à la hausse. TP1 à 0,2135 touché (on sort 50% + passe SL au break even). Puis <strong>TP2 à 0,2185</strong>. Trade clôturé avec <strong>+4,8% de gain</strong>.',
+    detail: '✅ <strong>Résultat</strong> : setup A+, 7 bougies entre entry et TP2. Les retail sweepés regardent leur écran sans comprendre. Toi, tu as lu le marché.',
+    visibleUntil: 39,
+    highlight: [30, 39],
+    drawLiquidity: true,
+    drawSweep: true,
+    drawFVG: true,
+    drawEntry: true,
+    drawTP: true
+  }
+];
+
+let currentStep = 0;
+let autoplay = null;
+
+function renderStep(idx) {
+  currentStep = idx;
+  const step = STEPS[idx];
+  document.querySelectorAll('.step-btn[data-step]').forEach(b => b.classList.remove('active'));
+  document.querySelector(`.step-btn[data-step="${idx}"]`).classList.add('active');
+  renderCandles(step.visibleUntil, step.highlight);
+  document.getElementById('annotations-back').innerHTML = '';
+  document.getElementById('annotations-front').innerHTML = '';
+  document.getElementById('legend').style.display = idx > 0 ? 'flex' : 'none';
+  if (step.drawLiquidity) drawLiquidity();
+  if (step.drawFVG) drawFVG();
+  if (step.drawSweep) drawSweep();
+  if (step.drawEntry) drawEntry();
+  if (step.drawTP) drawTP();
+  document.getElementById('exp-num').textContent = `ÉTAPE ${step.num} / 7`;
+  document.getElementById('exp-title').textContent = step.title;
+  document.getElementById('exp-text').innerHTML = step.text;
+  document.getElementById('exp-detail').innerHTML = step.detail;
+  const lastCandle = CANDLES[step.visibleUntil];
+  document.getElementById('price-c').textContent = lastCandle.c.toFixed(4);
+  document.getElementById('price-c').className = 'v ' + (lastCandle.c >= lastCandle.o ? 'green' : 'red');
+}
+
+function drawLiquidity() {
+  const g = document.getElementById('annotations-back');
+  const y = priceToY(0.2067);
+  const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+  line.setAttribute('x1', PAD_L);
+  line.setAttribute('y1', y);
+  line.setAttribute('x2', CHART_W - PAD_R);
+  line.setAttribute('y2', y);
+  line.setAttribute('stroke', '#f87171');
+  line.setAttribute('stroke-width', '1.5');
+  line.setAttribute('stroke-dasharray', '6,4');
+  line.setAttribute('opacity', '0.85');
+  g.appendChild(line);
+
+  const zone = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+  zone.setAttribute('x', PAD_L);
+  zone.setAttribute('y', priceToY(0.2067));
+  zone.setAttribute('width', CHART_W - PAD_L - PAD_R);
+  zone.setAttribute('height', priceToY(0.2055) - priceToY(0.2067));
+  zone.setAttribute('fill', '#f87171');
+  zone.setAttribute('opacity', '0.1');
+  g.appendChild(zone);
+
+  const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+  label.setAttribute('x', PAD_L + 10);
+  label.setAttribute('y', y - 8);
+  label.setAttribute('fill', '#f87171');
+  label.setAttribute('font-size', '13');
+  label.setAttribute('font-weight', '600');
+  label.textContent = '💰 LIQUIDITY · Low 0,2067 (stops retail cachés sous)';
+  g.appendChild(label);
+}
+
+function drawFVG() {
+  const g = document.getElementById('annotations-back');
+  const x1 = candleX(22) - candleW/2;
+  const x2 = candleX(31);
+  const yTop = priceToY(0.2090);
+  const yBot = priceToY(0.2065);
+  const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+  rect.setAttribute('x', x1);
+  rect.setAttribute('y', yTop);
+  rect.setAttribute('width', x2 - x1);
+  rect.setAttribute('height', yBot - yTop);
+  rect.setAttribute('fill', 'url(#fvgGrad)');
+  rect.setAttribute('stroke', '#4ade80');
+  rect.setAttribute('stroke-width', '1.5');
+  rect.setAttribute('stroke-dasharray', '4,3');
+  g.appendChild(rect);
+
+  const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+  label.setAttribute('x', x1 + (x2-x1)/2);
+  label.setAttribute('y', (yTop + yBot)/2 + 5);
+  label.setAttribute('text-anchor', 'middle');
+  label.setAttribute('fill', '#4ade80');
+  label.setAttribute('font-size', '15');
+  label.setAttribute('font-weight', '700');
+  label.textContent = '📦 FVG BULLISH 0,2065 — 0,2090';
+  g.appendChild(label);
+}
+
+function drawSweep() {
+  const gF = document.getElementById('annotations-front');
+  const x = candleX(21) + candleW/2;
+  const y = priceToY(0.2038);
+
+  const arrow = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+  arrow.setAttribute('x1', x + 50);
+  arrow.setAttribute('y1', y + 40);
+  arrow.setAttribute('x2', x + 5);
+  arrow.setAttribute('y2', y + 8);
+  arrow.setAttribute('stroke', '#f5a623');
+  arrow.setAttribute('stroke-width', '2.5');
+  arrow.setAttribute('marker-end', 'url(#arrowhead)');
+  gF.appendChild(arrow);
+
+  const labelBg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+  labelBg.setAttribute('x', x + 40);
+  labelBg.setAttribute('y', y + 30);
+  labelBg.setAttribute('width', 140);
+  labelBg.setAttribute('height', 44);
+  labelBg.setAttribute('rx', 8);
+  labelBg.setAttribute('fill', '#f5a623');
+  labelBg.setAttribute('filter', 'url(#glow)');
+  gF.appendChild(labelBg);
+
+  const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+  label.setAttribute('x', x + 110);
+  label.setAttribute('y', y + 58);
+  label.setAttribute('text-anchor', 'middle');
+  label.setAttribute('fill', '#131722');
+  label.setAttribute('font-size', '17');
+  label.setAttribute('font-weight', '800');
+  label.textContent = '🎯 SWEEP';
+  gF.appendChild(label);
+
+  const priceLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+  priceLabel.setAttribute('x', x - 8);
+  priceLabel.setAttribute('y', y + 22);
+  priceLabel.setAttribute('fill', '#f5a623');
+  priceLabel.setAttribute('font-size', '12');
+  priceLabel.setAttribute('font-weight', '700');
+  priceLabel.setAttribute('font-family', 'Geist Mono, monospace');
+  priceLabel.textContent = '0,2038';
+  gF.appendChild(priceLabel);
+}
+
+function drawEntry() {
+  const g = document.getElementById('annotations-front');
+  const xEntry = candleX(30);
+  const yEntry = priceToY(0.2085);
+
+  const eLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+  eLine.setAttribute('x1', xEntry);
+  eLine.setAttribute('y1', yEntry);
+  eLine.setAttribute('x2', CHART_W - PAD_R);
+  eLine.setAttribute('y2', yEntry);
+  eLine.setAttribute('stroke', '#2962ff');
+  eLine.setAttribute('stroke-width', '2.5');
+  g.appendChild(eLine);
+
+  const dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+  dot.setAttribute('cx', xEntry);
+  dot.setAttribute('cy', yEntry);
+  dot.setAttribute('r', 9);
+  dot.setAttribute('fill', '#2962ff');
+  dot.setAttribute('stroke', 'white');
+  dot.setAttribute('stroke-width', '2.5');
+  dot.setAttribute('filter', 'url(#glow)');
+  g.appendChild(dot);
+
+  const eLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+  eLabel.setAttribute('x', CHART_W - PAD_R + 8);
+  eLabel.setAttribute('y', yEntry + 4);
+  eLabel.setAttribute('fill', '#2962ff');
+  eLabel.setAttribute('font-size', '13');
+  eLabel.setAttribute('font-weight', '700');
+  eLabel.setAttribute('font-family', 'Geist Mono, monospace');
+  eLabel.textContent = 'ENTRY 0,2085';
+  g.appendChild(eLabel);
+
+  const ySL = priceToY(0.2035);
+  const slLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+  slLine.setAttribute('x1', xEntry);
+  slLine.setAttribute('y1', ySL);
+  slLine.setAttribute('x2', CHART_W - PAD_R);
+  slLine.setAttribute('y2', ySL);
+  slLine.setAttribute('stroke', '#f87171');
+  slLine.setAttribute('stroke-width', '1.8');
+  slLine.setAttribute('stroke-dasharray', '5,3');
+  g.appendChild(slLine);
+
+  const slLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+  slLabel.setAttribute('x', CHART_W - PAD_R + 8);
+  slLabel.setAttribute('y', ySL + 4);
+  slLabel.setAttribute('fill', '#f87171');
+  slLabel.setAttribute('font-size', '13');
+  slLabel.setAttribute('font-weight', '700');
+  slLabel.setAttribute('font-family', 'Geist Mono, monospace');
+  slLabel.textContent = 'SL 0,2035';
+  g.appendChild(slLabel);
+}
+
+function drawTP() {
+  const g = document.getElementById('annotations-front');
+  const xEntry = candleX(30);
+
+  const yTP1 = priceToY(0.2135);
+  const tp1Line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+  tp1Line.setAttribute('x1', xEntry);
+  tp1Line.setAttribute('y1', yTP1);
+  tp1Line.setAttribute('x2', CHART_W - PAD_R);
+  tp1Line.setAttribute('y2', yTP1);
+  tp1Line.setAttribute('stroke', '#f5a623');
+  tp1Line.setAttribute('stroke-width', '1.8');
+  tp1Line.setAttribute('stroke-dasharray', '5,3');
+  g.appendChild(tp1Line);
+
+  const tp1Label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+  tp1Label.setAttribute('x', CHART_W - PAD_R + 8);
+  tp1Label.setAttribute('y', yTP1 + 4);
+  tp1Label.setAttribute('fill', '#f5a623');
+  tp1Label.setAttribute('font-size', '13');
+  tp1Label.setAttribute('font-weight', '700');
+  tp1Label.setAttribute('font-family', 'Geist Mono, monospace');
+  tp1Label.textContent = 'TP1 0,2135';
+  g.appendChild(tp1Label);
+
+  const yTP2 = priceToY(0.2185);
+  const tp2Line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+  tp2Line.setAttribute('x1', xEntry);
+  tp2Line.setAttribute('y1', yTP2);
+  tp2Line.setAttribute('x2', CHART_W - PAD_R);
+  tp2Line.setAttribute('y2', yTP2);
+  tp2Line.setAttribute('stroke', '#26a69a');
+  tp2Line.setAttribute('stroke-width', '2.5');
+  g.appendChild(tp2Line);
+
+  const tp2Label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+  tp2Label.setAttribute('x', CHART_W - PAD_R + 8);
+  tp2Label.setAttribute('y', yTP2 + 4);
+  tp2Label.setAttribute('fill', '#26a69a');
+  tp2Label.setAttribute('font-size', '13');
+  tp2Label.setAttribute('font-weight', '700');
+  tp2Label.setAttribute('font-family', 'Geist Mono, monospace');
+  tp2Label.textContent = 'TP2 0,2185 🏆';
+  g.appendChild(tp2Label);
+
+  const trophy = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+  trophy.setAttribute('x', candleX(38));
+  trophy.setAttribute('y', yTP2 - 14);
+  trophy.setAttribute('text-anchor', 'middle');
+  trophy.setAttribute('font-size', '28');
+  trophy.textContent = '🏆';
+  g.appendChild(trophy);
+}
+
+document.querySelectorAll('.step-btn[data-step]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    if (autoplay) { clearInterval(autoplay); autoplay = null; document.getElementById('play-btn').textContent = '▶ Auto'; }
+    renderStep(parseInt(btn.dataset.step));
+  });
+});
+
+document.getElementById('reset-btn').addEventListener('click', () => {
+  if (autoplay) { clearInterval(autoplay); autoplay = null; document.getElementById('play-btn').textContent = '▶ Auto'; }
+  renderStep(0);
+});
+
+document.getElementById('play-btn').addEventListener('click', () => {
+  const btn = document.getElementById('play-btn');
+  if (autoplay) {
+    clearInterval(autoplay);
+    autoplay = null;
+    btn.textContent = '▶ Auto';
+  } else {
+    btn.textContent = '⏸ Pause';
+    let step = currentStep;
+    autoplay = setInterval(() => {
+      step = (step + 1) % STEPS.length;
+      renderStep(step);
+      if (step === STEPS.length - 1) {
+        clearInterval(autoplay);
+        autoplay = null;
+        btn.textContent = '▶ Auto';
+      }
+    }, 3500);
+  }
+});
+
+// Fullscreen
+document.getElementById('fs-btn').addEventListener('click', () => {
+  if (!document.fullscreenElement) {
+    document.documentElement.requestFullscreen();
+  } else {
+    document.exitFullscreen();
+  }
+});
+
+renderPriceLabels();
+renderStep(0);
+</script>
+
+</body>
+</html>
