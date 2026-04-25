@@ -217,8 +217,11 @@ const tierData = {
 const data = tierData[tier] || tierData.essentiel;
 
 function genCode() {
-  const seg = () => Math.random().toString(36).substring(2, 6).toUpperCase();
-  return `NDX-${seg()}-${seg()}-${seg()}`;
+  // Format aligné avec le skill : NDX-{TIER}-XXXX-XXXX-XXXX
+  const chars = 'ABCDEFGHIJKLMNPQRSTUVWXYZ23456789'; // sans 0/O/1/I (anti-confusion)
+  const seg = () => Array.from({length:4}, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+  const tierShort = tier === 'pro' ? 'PRO' : tier === 'elite' ? 'ELT' : 'ESS';
+  return `NDX-${tierShort}-${seg()}-${seg()}-${seg()}`;
 }
 
 const code = lastOrder.activationCode || genCode();
