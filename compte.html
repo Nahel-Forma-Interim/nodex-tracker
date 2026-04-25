@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#000000">
+<title>Mon compte — Nodex Trading</title>
+<link rel="icon" href="logo.avif">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800;900&family=Geist+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root { --bg:#000; --fg:#fff; --muted:rgba(255,255,255,0.55); --subtle:rgba(255,255,255,0.3); --line:rgba(255,255,255,0.08); --line-strong:rgba(255,255,255,0.18); --accent:#6fa8ff; --green:#4ade80; --orange:#f59e0b; --gold:#f5d061; --red:#ef4444; --font-sans:'Geist',sans-serif; --font-mono:'Geist Mono',monospace; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body { font-family: var(--font-sans); background: var(--bg); color: var(--fg); min-height: 100vh; overflow-x: hidden; line-height: 1.6; }
+
+.bg-layer { position: fixed; top:0; left:0; right:0; bottom:0; pointer-events:none; z-index:0; }
+.stars { background-image: radial-gradient(1px 1px at 20% 30%, white, transparent), radial-gradient(1px 1px at 60% 70%, rgba(255,255,255,0.8), transparent), radial-gradient(1px 1px at 80% 10%, white, transparent), radial-gradient(1px 1px at 33% 65%, rgba(255,255,255,0.7), transparent); background-size: 250% 250%; animation: starfall 80s linear infinite; opacity: 0.4; }
+@keyframes starfall { 0%{background-position:0% 0%;} 100%{background-position:100% 100%;} }
+.glows { background: radial-gradient(ellipse 600px 400px at 15% 85%, rgba(111,168,255,0.12) 0%, transparent 60%), radial-gradient(ellipse 700px 500px at 85% 15%, rgba(180,200,255,0.08) 0%, transparent 60%); }
+.beams { overflow: hidden; }
+.beam { position:absolute; top:-20%; width:1px; height:140%; background: linear-gradient(180deg, transparent, rgba(255,255,255,0.4) 30%, rgba(255,255,255,0.9) 50%, rgba(255,255,255,0.4) 70%, transparent); filter: blur(0.5px); animation: beamMove 12s ease-in-out infinite; opacity: 0.2; }
+.beam:nth-child(1){left:25%;} .beam:nth-child(2){left:55%;animation-delay:-4s;animation-duration:18s;} .beam:nth-child(3){left:80%;animation-delay:-8s;animation-duration:15s;}
+@keyframes beamMove { 0%,100%{opacity:0.05; transform:translateY(0) scaleY(1);} 50%{opacity:0.3; transform:translateY(-20px) scaleY(1.1);} }
+.flare { position:absolute; border-radius:50%; filter:blur(60px); opacity:0.35; animation: flareFloat 20s ease-in-out infinite; }
+.flare-1 { top:-150px; right:-150px; width:500px; height:500px; background: radial-gradient(circle, rgba(111,168,255,0.4) 0%, transparent 70%); }
+.flare-2 { bottom:-200px; left:-200px; width:600px; height:600px; background: radial-gradient(circle, rgba(180,200,255,0.3) 0%, transparent 70%); animation-delay:-10s; }
+@keyframes flareFloat { 0%,100%{transform:translate(0,0) scale(1);} 33%{transform:translate(40px,-30px) scale(1.1);} 66%{transform:translate(-30px,40px) scale(0.95);} }
+.grid-overlay { background-image: linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px); background-size: 60px 60px; opacity: 0.4; }
+
+nav.top { position: fixed; top: 0; left: 0; right: 0; z-index: 100; padding: 16px 32px; display: flex; justify-content: space-between; align-items: center; background: linear-gradient(180deg, rgba(0,0,0,0.7), transparent); backdrop-filter: blur(8px); }
+.logo-wrap { display: flex; align-items: center; gap: 12px; cursor: pointer; text-decoration: none; }
+.logo-icon { position: relative; width: 38px; height: 38px; border-radius: 22.5%; background: linear-gradient(135deg, rgba(111,168,255,0.22), rgba(180,200,255,0.05)); border: 1px solid rgba(255,255,255,0.12); display: flex; align-items: center; justify-content: center; }
+.logo-icon::before { content:''; position:absolute; top:0; left:0; right:0; height:50%; background: linear-gradient(180deg, rgba(255,255,255,0.12), transparent); border-radius: 22.5% 22.5% 0 0; }
+.logo-img { width: 22px; height: 22px; filter: brightness(0) invert(1); z-index: 1; }
+.logo-text { font-size: 15px; font-weight: 800; background: linear-gradient(135deg, #fff, #c8d8ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.nav-actions { display: flex; align-items: center; gap: 16px; }
+.user-pill { padding: 7px 14px; border-radius: 999px; font-size: 12px; font-family: var(--font-mono); color: var(--accent); background: rgba(111,168,255,0.08); border: 1px solid rgba(111,168,255,0.2); display: none; align-items: center; gap: 8px; }
+.user-pill.show { display: inline-flex; }
+.btn-logout { padding: 7px 14px; background: transparent; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; font-size: 12px; cursor: pointer; font-family: var(--font-sans); display: none; transition: all 0.2s; }
+.btn-logout.show { display: inline-flex; }
+.btn-logout:hover { color: var(--fg); border-color: var(--line-strong); }
+
+/* ═══════════════════════════════════════════════════════
+   LOGIN VIEW
+═══════════════════════════════════════════════════════ */
+.login-view { position: relative; z-index: 10; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 100px 24px 60px; }
+.login-card { max-width: 460px; width: 100%; background: rgba(255,255,255,0.025); border: 1px solid var(--line); border-radius: 24px; padding: 44px 38px; backdrop-filter: blur(14px); }
+.login-kicker { font-size: 11px; font-family: var(--font-mono); color: var(--accent); letter-spacing: 2.5px; text-transform: uppercase; margin-bottom: 14px; text-align: center; }
+.login-title { font-size: clamp(28px, 4vw, 38px); font-weight: 400; letter-spacing: -1.5px; line-height: 1.1; text-align: center; margin-bottom: 12px; }
+.login-title em { font-style: italic; background: linear-gradient(135deg, #fff, #6fa8ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; padding-right: 0.1em; display: inline-block; }
+.login-sub { font-size: 14px; color: var(--muted); text-align: center; margin-bottom: 32px; line-height: 1.6; }
+
+.input-group { margin-bottom: 16px; }
+.input-label { display: block; font-size: 11px; font-family: var(--font-mono); color: var(--muted); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 8px; }
+.input-field { width: 100%; padding: 14px 18px; background: rgba(255,255,255,0.04); border: 1px solid var(--line); border-radius: 12px; color: var(--fg); font-size: 15px; font-family: var(--font-sans); transition: all 0.2s; }
+.input-field:focus { outline: none; border-color: var(--accent); background: rgba(111,168,255,0.05); }
+
+.btn-login { width: 100%; padding: 15px; background: var(--fg); color: var(--bg); border: none; border-radius: 12px; font-size: 15px; font-weight: 600; cursor: pointer; font-family: var(--font-sans); transition: all 0.2s; }
+.btn-login:hover { transform: translateY(-1px); box-shadow: 0 8px 30px rgba(255,255,255,0.25); }
+
+.login-info { margin-top: 28px; padding: 16px 18px; background: rgba(245,158,11,0.06); border: 1px solid rgba(245,158,11,0.2); border-radius: 12px; }
+.login-info-title { font-size: 11px; font-family: var(--font-mono); color: var(--orange); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 6px; }
+.login-info-text { font-size: 12px; color: var(--muted); line-height: 1.6; }
+
+.login-footer { margin-top: 24px; text-align: center; font-size: 12px; color: var(--subtle); }
+.login-footer a { color: var(--muted); text-decoration: underline; }
+
+/* ═══════════════════════════════════════════════════════
+   DASHBOARD VIEW
+═══════════════════════════════════════════════════════ */
+.dashboard-view { position: relative; z-index: 10; padding: 110px 24px 60px; max-width: 1200px; margin: 0 auto; display: none; }
+.dashboard-view.show { display: block; }
+
+.dashboard-header { margin-bottom: 32px; display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 20px; }
+.dashboard-h1 { font-size: clamp(32px, 5vw, 48px); font-weight: 400; letter-spacing: -2px; line-height: 1.05; }
+.dashboard-h1 em { font-style: italic; background: linear-gradient(135deg, #fff, #6fa8ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; padding-right: 0.12em; display: inline-block; }
+.dashboard-sub { font-size: 14px; color: var(--muted); margin-top: 6px; }
+
+.tier-current { padding: 10px 18px; border-radius: 999px; font-size: 12px; font-family: var(--font-mono); letter-spacing: 1.5px; text-transform: uppercase; background: rgba(111,168,255,0.1); border: 1px solid rgba(111,168,255,0.3); color: var(--accent); display: inline-flex; align-items: center; gap: 8px; }
+.tier-current.gold { background: rgba(245,208,97,0.1); border-color: rgba(245,208,97,0.3); color: var(--gold); }
+.tier-current.green { background: rgba(74,222,128,0.1); border-color: rgba(74,222,128,0.3); color: var(--green); }
+.tier-current::before { content: '●'; }
+
+/* Stats row */
+.stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 36px; }
+@media (max-width: 768px) { .stats-row { grid-template-columns: repeat(2, 1fr); } }
+.stat-tile { background: rgba(255,255,255,0.025); border: 1px solid var(--line); border-radius: 16px; padding: 20px; backdrop-filter: blur(10px); }
+.stat-tile-label { font-size: 11px; font-family: var(--font-mono); color: var(--muted); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 8px; }
+.stat-tile-value { font-size: 24px; font-weight: 600; line-height: 1.1; background: linear-gradient(135deg, #fff, #6fa8ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; word-break: break-all; }
+.stat-tile-value.mono { font-family: var(--font-mono); font-size: 18px; letter-spacing: 1px; }
+
+/* Sections */
+.section { margin-bottom: 36px; }
+.section-head { margin-bottom: 18px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
+.section-kicker { font-size: 11px; font-family: var(--font-mono); color: var(--accent); letter-spacing: 2.5px; text-transform: uppercase; }
+.section-title-h2 { font-size: 22px; font-weight: 500; letter-spacing: -0.5px; margin-top: 4px; }
+
+/* Resources grid */
+.resources-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+.resource-card { background: rgba(255,255,255,0.025); border: 1px solid var(--line); border-radius: 18px; padding: 24px; transition: all 0.3s cubic-bezier(0.4,0,0.2,1); position: relative; }
+.resource-card:hover { border-color: var(--line-strong); transform: translateY(-2px); }
+.resource-card.locked { opacity: 0.45; }
+.resource-card.locked::after { content: '🔒'; position: absolute; top: 18px; right: 18px; font-size: 16px; }
+.resource-icon { width: 42px; height: 42px; border-radius: 12px; background: linear-gradient(135deg, rgba(111,168,255,0.18), rgba(180,200,255,0.05)); border: 1px solid rgba(111,168,255,0.2); display: flex; align-items: center; justify-content: center; margin-bottom: 14px; font-family: var(--font-mono); font-size: 14px; color: var(--accent); font-weight: 600; }
+.resource-name { font-size: 16px; font-weight: 500; margin-bottom: 4px; }
+.resource-desc { font-size: 13px; color: var(--muted); line-height: 1.5; margin-bottom: 16px; }
+.resource-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.resource-btn { padding: 8px 14px; background: rgba(111,168,255,0.1); border: 1px solid rgba(111,168,255,0.25); color: var(--accent); border-radius: 999px; font-size: 12px; font-weight: 500; text-decoration: none; cursor: pointer; transition: all 0.2s; font-family: var(--font-sans); display: inline-flex; align-items: center; gap: 4px; }
+.resource-btn:hover { background: rgba(111,168,255,0.18); border-color: var(--accent); }
+.resource-btn.primary { background: var(--fg); color: var(--bg); border: none; }
+.resource-btn.disabled { opacity: 0.4; cursor: not-allowed; pointer-events: none; }
+.resource-status { font-size: 11px; font-family: var(--font-mono); color: var(--muted); letter-spacing: 1px; margin-bottom: 10px; }
+.resource-status.coming { color: var(--orange); }
+.resource-status.locked { color: var(--red); }
+
+/* Order info */
+.order-card { background: rgba(255,255,255,0.025); border: 1px solid var(--line); border-radius: 18px; padding: 28px; backdrop-filter: blur(10px); }
+.order-row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--line); font-size: 14px; }
+.order-row:last-child { border-bottom: none; }
+.order-row-label { color: var(--muted); font-family: var(--font-mono); font-size: 12px; letter-spacing: 1.5px; text-transform: uppercase; }
+.order-row-value { color: var(--fg); font-weight: 500; }
+.order-row-value.mono { font-family: var(--font-mono); color: var(--accent); }
+
+/* Upgrade banner */
+.upgrade-banner { background: linear-gradient(135deg, rgba(111,168,255,0.08), rgba(180,200,255,0.03)); border: 1px solid rgba(111,168,255,0.25); border-radius: 18px; padding: 24px 28px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; }
+.upgrade-banner.gold { background: linear-gradient(135deg, rgba(245,208,97,0.08), rgba(255,255,255,0.02)); border-color: rgba(245,208,97,0.25); }
+.upgrade-text-wrap { flex: 1; min-width: 250px; }
+.upgrade-title { font-size: 16px; font-weight: 500; margin-bottom: 4px; }
+.upgrade-desc { font-size: 13px; color: var(--muted); }
+.upgrade-cta { padding: 12px 22px; background: var(--fg); color: var(--bg); border-radius: 999px; font-size: 13px; font-weight: 600; text-decoration: none; transition: all 0.2s; white-space: nowrap; }
+.upgrade-cta:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(255,255,255,0.2); }
+
+footer { position: relative; z-index: 10; padding: 40px 24px; text-align: center; border-top: 1px solid var(--line); margin-top: 60px; }
+.footer-text { color: var(--subtle); font-size: 12px; font-family: var(--font-mono); letter-spacing: 1px; text-transform: uppercase; }
+
+.toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(100px); background: rgba(74,222,128,0.95); color: #001; padding: 12px 24px; border-radius: 999px; font-size: 13px; font-weight: 600; z-index: 1000; opacity: 0; transition: all 0.4s cubic-bezier(0.4,0,0.2,1); }
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+.toast.error { background: rgba(239,68,68,0.95); }
+
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; } }
+</style>
+</head>
+<body>
+
+<div class="bg-layer glows"></div>
+<div class="bg-layer stars"></div>
+<div class="bg-layer beams"><div class="beam"></div><div class="beam"></div><div class="beam"></div></div>
+<div class="bg-layer"><div class="flare flare-1"></div><div class="flare flare-2"></div></div>
+<div class="bg-layer grid-overlay"></div>
+
+<nav class="top">
+  <a href="landing.html" class="logo-wrap">
+    <div class="logo-icon"><img src="logo.avif" alt="Nodex" class="logo-img" onerror="this.style.display='none'"></div>
+    <span class="logo-text">NODEX</span>
+  </a>
+  <div class="nav-actions">
+    <span class="user-pill" id="userPill"></span>
+    <button class="btn-logout" id="logoutBtn" onclick="logout()">Déconnexion</button>
+  </div>
+</nav>
+
+<!-- ═══════════════════════════════════════════════════
+     LOGIN
+═══════════════════════════════════════════════════ -->
+<div class="login-view" id="loginView">
+  <div class="login-card">
+    <div class="login-kicker">Espace membre</div>
+    <h1 class="login-title">Accède à <em>tes ressources.</em></h1>
+    <p class="login-sub">Entre l'email que tu as utilisé pour ta commande. Pas de mot de passe — un lien d'accès direct (mode simulation pour l'instant).</p>
+
+    <form onsubmit="login(event)">
+      <div class="input-group">
+        <label class="input-label">Email de commande</label>
+        <input type="email" class="input-field" id="loginEmail" required placeholder="ton.email@exemple.com" autocomplete="email">
+      </div>
+      <button type="submit" class="btn-login">Accéder à mon compte →</button>
+    </form>
+
+    <div class="login-info">
+      <div class="login-info-title">Mode simulation</div>
+      <div class="login-info-text">Cet espace lit ta commande locale (depuis le checkout simulation). Quand Stripe sera branché, on enverra par email un lien magique unique (pas de mot de passe à retenir).</div>
+    </div>
+
+    <div class="login-footer">
+      Pas encore de commande ? <a href="landing.html">Découvrir les tiers</a>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     DASHBOARD
+═══════════════════════════════════════════════════ -->
+<div class="dashboard-view" id="dashboardView">
+
+  <div class="dashboard-header">
+    <div>
+      <h1 class="dashboard-h1">Salut <em id="dashName">là</em>.</h1>
+      <p class="dashboard-sub">Bienvenue dans ton espace Nodex. Tu peux télécharger tes ressources, copier ton code d'activation, et lancer ton onboarding.</p>
+    </div>
+    <span class="tier-current" id="dashTierPill">Tier · Essentiel</span>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-row">
+    <div class="stat-tile">
+      <div class="stat-tile-label">Tier</div>
+      <div class="stat-tile-value" id="statTier">Essentiel</div>
+    </div>
+    <div class="stat-tile">
+      <div class="stat-tile-label">Code d'activation</div>
+      <div class="stat-tile-value mono" id="statCode">NDX-XXXX</div>
+    </div>
+    <div class="stat-tile">
+      <div class="stat-tile-label">Commande</div>
+      <div class="stat-tile-value mono" id="statOrder">NDX-XXXX</div>
+    </div>
+    <div class="stat-tile">
+      <div class="stat-tile-label">Membre depuis</div>
+      <div class="stat-tile-value mono" id="statDate">—</div>
+    </div>
+  </div>
+
+  <!-- Resources -->
+  <div class="section">
+    <div class="section-head">
+      <div>
+        <div class="section-kicker">01 · Tes ressources</div>
+        <h2 class="section-title-h2">Téléchargements et accès</h2>
+      </div>
+    </div>
+    <div class="resources-grid" id="resourcesGrid"></div>
+  </div>
+
+  <!-- Order info -->
+  <div class="section">
+    <div class="section-head">
+      <div>
+        <div class="section-kicker">02 · Ta commande</div>
+        <h2 class="section-title-h2">Détails de facturation</h2>
+      </div>
+    </div>
+    <div class="order-card">
+      <div class="order-row"><span class="order-row-label">Email</span><span class="order-row-value" id="orderEmail">—</span></div>
+      <div class="order-row"><span class="order-row-label">Nom</span><span class="order-row-value" id="orderName">—</span></div>
+      <div class="order-row"><span class="order-row-label">Pays</span><span class="order-row-value" id="orderCountry">—</span></div>
+      <div class="order-row"><span class="order-row-label">N° commande</span><span class="order-row-value mono" id="orderId">—</span></div>
+      <div class="order-row"><span class="order-row-label">Code activation</span><span class="order-row-value mono" id="orderCode">—</span></div>
+      <div class="order-row"><span class="order-row-label">Montant</span><span class="order-row-value" id="orderAmount">—</span></div>
+      <div class="order-row"><span class="order-row-label">Date achat</span><span class="order-row-value" id="orderDate">—</span></div>
+      <div class="order-row"><span class="order-row-label">Garantie</span><span class="order-row-value">14 jours satisfait/remboursé</span></div>
+    </div>
+  </div>
+
+  <!-- Upgrade -->
+  <div class="section" id="upgradeSection" style="display:none;">
+    <div class="upgrade-banner" id="upgradeBanner">
+      <div class="upgrade-text-wrap">
+        <div class="upgrade-title" id="upgradeTitle">Passe à Pro</div>
+        <div class="upgrade-desc" id="upgradeDesc">Tu paies seulement la différence. Accède au Telegram positions Nahel + watchlist privée.</div>
+      </div>
+      <a href="tier-pro.html" class="upgrade-cta" id="upgradeCta">Voir Pro →</a>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  <div class="footer-text">© 2026 Nodex Trading · Espace membre · nodexcontact@gmail.com</div>
+</footer>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const tierLabels = { essentiel: 'Essentiel', pro: 'Pro', elite: 'Elite' };
+
+const allResources = {
+  skill: { name: 'Skill IA Nodex V5.2', desc: 'Le formateur IA personnel pour Claude Code. ZIP + script d\'installation Windows.', icon: 'A', tier: 'essentiel', actions: [{label:'Télécharger ZIP', href:'#download-skill', primary:true}, {label:'Guide install', href:'INSTALL.html'}] },
+  pine: { name: '4 indicateurs Pine Script', desc: 'Sweep Detector, FVG Auto, Volume Filter, HTF Bias. À copier-coller dans TradingView.', icon: 'B', tier: 'essentiel', actions: [{label:'Télécharger pack', href:'pine/'}] },
+  fiche: { name: 'Fiche interactive cockpit', desc: 'Checklist 18 points, calculateur 1 %, journal live, 10 règles psycho. Tout reste local.', icon: 'C', tier: 'essentiel', actions: [{label:'Ouvrir la fiche', href:'fiche-nodex-v5.2.html', primary:true}] },
+  guide: { name: 'Guide TradingView', desc: 'Configuration multi-timeframes, hotkeys, alertes, watchlist. Setup en 12 minutes.', icon: 'D', tier: 'essentiel', actions: [{label:'Ouvrir', href:'#guide-tv'}] },
+  onboarding: { name: 'Onboarding Nodex', desc: 'Parcours guidé 7 étapes pour démarrer correctement. Sauvegarde ta progression.', icon: 'O', tier: 'essentiel', actions: [{label:'Lancer onboarding →', href:'onboarding.html', primary:true}] },
+  telegram: { name: 'Telegram positions Nahel', desc: 'Channel privé en lecture : zones surveillées, entrées potentielles, résultats. 5-15 msg/jour.', icon: 'TG', tier: 'pro', actions: [{label:'Lien d\'invitation', href:'#telegram-invite'}] },
+  watchlist: { name: 'Watchlist crypto privée', desc: 'Liste des 8-12 alts validés par Nahel chaque dimanche. Format TradingView importable.', icon: 'WL', tier: 'pro', actions: [{label:'Télécharger .json', href:'#watchlist-tv'}] },
+  brief: { name: 'Brief weekly Nahel', desc: 'Note hebdomadaire : ce qui a fonctionné, les erreurs détectées, les ajustements méthode.', icon: 'WK', tier: 'pro', actions: [{label:'Voir les briefs', href:'#briefs'}] },
+  bot: { name: 'Bot Auto Scanner Telegram', desc: 'Scan ta watchlist 24/7 et t\'envoie un signal complet quand un setup Sweep+FVG est détecté.', icon: 'BOT', tier: 'elite', status: 'coming', actions: [{label:'Liste prioritaire', href:'#bot-waitlist'}] }
+};
+
+const tierAccess = {
+  essentiel: ['skill','pine','fiche','guide','onboarding'],
+  pro: ['skill','pine','fiche','guide','onboarding','telegram','watchlist','brief'],
+  elite: ['skill','pine','fiche','guide','onboarding','telegram','watchlist','brief','bot']
+};
+
+function showToast(msg, type) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast' + (type === 'error' ? ' error' : '');
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+function login(e) {
+  e.preventDefault();
+  const email = document.getElementById('loginEmail').value.trim().toLowerCase();
+  const lastOrder = JSON.parse(localStorage.getItem('nodex_last_order') || '{}');
+  const orderEmail = (lastOrder.email || '').toLowerCase();
+
+  if (!email) { showToast('Entre un email valide', 'error'); return; }
+
+  if (orderEmail && orderEmail === email) {
+    // Match exact avec une commande existante
+    localStorage.setItem('nodex_session_email', email);
+    showDashboard();
+    showToast('Connexion réussie');
+  } else if (orderEmail) {
+    // Email existant mais ne correspond pas
+    showToast('Aucune commande trouvée pour cet email', 'error');
+  } else {
+    // Aucune commande locale — mode démo
+    const demoOrder = {
+      email: email,
+      firstname: email.split('@')[0],
+      lastname: '',
+      country: 'France',
+      tier: 'essentiel',
+      price: '497',
+      orderId: 'NDX-DEMO-' + Date.now().toString(36).toUpperCase(),
+      activationCode: 'NDX-DEMO-XXXX-XXXX',
+      date: new Date().toISOString()
+    };
+    localStorage.setItem('nodex_last_order', JSON.stringify(demoOrder));
+    localStorage.setItem('nodex_session_email', email);
+    showDashboard();
+    showToast('Mode démo · commande Essentiel simulée');
+  }
+}
+
+function logout() {
+  localStorage.removeItem('nodex_session_email');
+  document.getElementById('loginView').style.display = 'flex';
+  document.getElementById('dashboardView').classList.remove('show');
+  document.getElementById('userPill').classList.remove('show');
+  document.getElementById('logoutBtn').classList.remove('show');
+  document.getElementById('loginEmail').value = '';
+  showToast('Déconnecté');
+}
+
+function showDashboard() {
+  const order = JSON.parse(localStorage.getItem('nodex_last_order') || '{}');
+  const tier = order.tier || 'essentiel';
+
+  document.getElementById('loginView').style.display = 'none';
+  document.getElementById('dashboardView').classList.add('show');
+  document.getElementById('userPill').classList.add('show');
+  document.getElementById('logoutBtn').classList.add('show');
+  document.getElementById('userPill').textContent = order.email || 'Connecté';
+
+  // Dashboard
+  const firstname = order.firstname || (order.email ? order.email.split('@')[0] : 'là');
+  document.getElementById('dashName').textContent = firstname;
+
+  const tierPill = document.getElementById('dashTierPill');
+  tierPill.textContent = 'Tier · ' + (tierLabels[tier] || 'Essentiel');
+  tierPill.className = 'tier-current' + (tier === 'elite' ? ' gold' : tier === 'pro' ? ' green' : '');
+
+  // Stats
+  document.getElementById('statTier').textContent = tierLabels[tier] || 'Essentiel';
+  document.getElementById('statCode').textContent = order.activationCode || 'NDX-XXXX-XXXX-XXXX';
+  document.getElementById('statOrder').textContent = order.orderId || '—';
+  document.getElementById('statDate').textContent = order.date ? new Date(order.date).toLocaleDateString('fr-FR') : '—';
+
+  // Order info
+  document.getElementById('orderEmail').textContent = order.email || '—';
+  document.getElementById('orderName').textContent = ((order.firstname || '') + ' ' + (order.lastname || '')).trim() || '—';
+  document.getElementById('orderCountry').textContent = order.country || '—';
+  document.getElementById('orderId').textContent = order.orderId || '—';
+  document.getElementById('orderCode').textContent = order.activationCode || '—';
+  document.getElementById('orderAmount').textContent = (order.price || '—') + (order.price ? '€' : '');
+  document.getElementById('orderDate').textContent = order.date ? new Date(order.date).toLocaleDateString('fr-FR', {day:'2-digit', month:'long', year:'numeric', hour:'2-digit', minute:'2-digit'}) : '—';
+
+  // Resources
+  const accessible = tierAccess[tier] || tierAccess.essentiel;
+  const grid = document.getElementById('resourcesGrid');
+  grid.innerHTML = Object.entries(allResources).map(([key, res]) => {
+    const isAccessible = accessible.includes(key);
+    const isComing = res.status === 'coming';
+    return `
+      <div class="resource-card ${!isAccessible ? 'locked' : ''}">
+        <div class="resource-icon">${res.icon}</div>
+        ${isComing ? '<div class="resource-status coming">Q3 2026 · liste prioritaire</div>' : ''}
+        ${!isAccessible ? '<div class="resource-status locked">Réservé tier ' + tierLabels[res.tier] + '</div>' : ''}
+        <div class="resource-name">${res.name}</div>
+        <div class="resource-desc">${res.desc}</div>
+        <div class="resource-actions">
+          ${res.actions.map(a => `<a href="${isAccessible ? a.href : '#'}" class="resource-btn ${a.primary ? 'primary' : ''} ${!isAccessible ? 'disabled' : ''}" ${!isAccessible ? 'onclick="event.preventDefault();showToast(\'Tier supérieur requis\',\'error\');"' : ''}>${a.label}</a>`).join('')}
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  // Upgrade banner
+  const upgradeSection = document.getElementById('upgradeSection');
+  if (tier === 'essentiel') {
+    upgradeSection.style.display = 'block';
+    document.getElementById('upgradeTitle').textContent = 'Passe à Pro · 500€ de différence';
+    document.getElementById('upgradeDesc').textContent = 'Accède au Telegram avec les positions de Nahel + watchlist privée hebdo + brief weekly.';
+    document.getElementById('upgradeCta').href = 'tier-pro.html';
+    document.getElementById('upgradeCta').textContent = 'Voir Pro →';
+    document.getElementById('upgradeBanner').className = 'upgrade-banner';
+  } else if (tier === 'pro') {
+    upgradeSection.style.display = 'block';
+    document.getElementById('upgradeTitle').textContent = 'Passe à Elite · 1500€ de différence';
+    document.getElementById('upgradeDesc').textContent = 'Le bot Auto Scanner qui détecte les setups 24/7 + watchlist personnalisable + crédit cloud première année.';
+    document.getElementById('upgradeCta').href = 'tier-elite.html';
+    document.getElementById('upgradeCta').textContent = 'Voir Elite →';
+    document.getElementById('upgradeBanner').className = 'upgrade-banner gold';
+  } else {
+    upgradeSection.style.display = 'none';
+  }
+}
+
+// Auto-login si déjà connecté
+const session = localStorage.getItem('nodex_session_email');
+if (session) showDashboard();
+
+// Mouse parallax
+document.addEventListener('mousemove', (e) => {
+  const x = (e.clientX / window.innerWidth - 0.5) * 30;
+  const y = (e.clientY / window.innerHeight - 0.5) * 30;
+  const f1 = document.querySelector('.flare-1'); const f2 = document.querySelector('.flare-2');
+  if (f1) f1.style.transform = `translate(${x*0.4}px, ${y*0.4}px)`;
+  if (f2) f2.style.transform = `translate(${x*0.7}px, ${y*0.7}px)`;
+});
+</script>
+</body>
+</html>
