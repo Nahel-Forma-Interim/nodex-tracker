@@ -197,9 +197,8 @@ footer { position: relative; z-index: 10; padding: 40px 24px; text-align: center
       <div class="input-section">
         <div class="section-title">Démarrage rapide</div>
         <div class="presets">
-          <button class="preset-btn active" onclick="loadPreset('nahel')">Nahel · mariage</button>
           <button class="preset-btn" onclick="loadPreset('starter')">Débutant 500€</button>
-          <button class="preset-btn" onclick="loadPreset('serieux')">Sérieux 5k€</button>
+          <button class="preset-btn active" onclick="loadPreset('serieux')">Sérieux 5k€</button>
           <button class="preset-btn" onclick="loadPreset('expert')">Expert 20k€</button>
         </div>
       </div>
@@ -213,15 +212,15 @@ footer { position: relative; z-index: 10; padding: 40px 24px; text-align: center
         </div>
         <div class="input-group">
           <label class="input-label">Mois jusqu'à ton objectif <span class="input-value" id="lbl-months">8 mois</span></label>
-          <input type="range" id="months" min="1" max="36" step="1" value="8" oninput="recalc()">
+          <input type="range" id="months" min="1" max="36" step="1" value="12" oninput="recalc()">
         </div>
         <div class="input-group">
           <label class="input-label">Apport mensuel (salaire réinvesti) <span class="input-value" id="lbl-deposit">700 €</span></label>
-          <input type="range" id="deposit" min="0" max="3000" step="50" value="700" oninput="recalc()">
+          <input type="range" id="deposit" min="0" max="3000" step="50" value="500" oninput="recalc()">
         </div>
         <div class="input-group">
           <label class="input-label">Objectif capital final <span class="input-value" id="lbl-target">20 000 €</span></label>
-          <input type="range" id="target" min="500" max="200000" step="500" value="20000" oninput="recalc()">
+          <input type="range" id="target" min="500" max="200000" step="500" value="15000" oninput="recalc()">
         </div>
       </div>
 
@@ -329,7 +328,6 @@ footer { position: relative; z-index: 10; padding: 40px 24px; text-align: center
 // PRESETS
 // ═══════════════════════════════════════════════════════════
 const PRESETS = {
-  nahel:   { capital: 5000, months: 8,  deposit: 700, target: 20000, wr: 50, rr: 2,   trades: 8,  risk: 1 },
   starter: { capital: 500,  months: 12, deposit: 100, target: 2000,  wr: 45, rr: 2,   trades: 6,  risk: 0.5 },
   serieux: { capital: 5000, months: 12, deposit: 500, target: 15000, wr: 50, rr: 2,   trades: 8,  risk: 1 },
   expert:  { capital: 20000, months: 24, deposit: 0,  target: 100000, wr: 55, rr: 2.5, trades: 10, risk: 1 }
